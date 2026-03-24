@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Envirothon Flashcards</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f0f4f0;min-height:100vh}
+.screen{display:none;padding:16px}.screen.active{display:block}
+.center{display:flex;align-items:center;justify-content:center;min-height:100vh}
+h1{font-size:1.4em;color:#1a3a1a;margin:6px 0 4px}
+.subtitle{color:#555;font-size:.85em}
+.card-wrap{max-width:480px;margin:0 auto}
+.home-wrap{max-width:520px;margin:0 auto}
+.progress-bar-bg{height:5px;background:#ddd;border-radius:4px;margin-bottom:14px}
+.progress-bar-fg{height:100%;border-radius:4px;transition:width .3s}
+.flashcard{background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.1);overflow:hidden;margin-bottom:14px}
+.img-area{position:relative;height:200px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.img-area img{width:100%;height:100%;object-fit:cover}
+.img-placeholder{text-align:center}.img-placeholder .emoji{font-size:3.5em}
+.img-placeholder .hint{font-size:.75em;font-weight:600;margin-top:4px;opacity:.7}
+.cat-badge{position:absolute;top:8px;left:8px;color:#fff;border-radius:7px;padding:3px 9px;font-size:.72em;font-weight:700}
+.question-area{padding:16px 18px}
+.question-text{font-size:1em;font-weight:600;color:#1a1a1a;line-height:1.5}
+.answer-area{border-top-width:2px;border-top-style:solid;padding:14px 18px}
+.answer-name{font-weight:700;font-size:.85em;margin-bottom:6px}
+.answer-body{font-size:.82em;color:#222;white-space:pre-wrap;line-height:1.6;font-family:system-ui,sans-serif}
+.btn{border:none;border-radius:10px;padding:14px;cursor:pointer;font-weight:700;font-size:.95em;width:100%}
+.btn-reveal{color:#fff}
+.btn-row{display:flex;gap:10px}
+.btn-wrong{flex:1;background:#fbeaea;color:#8b1a1a;border:2px solid #f5c0c0;border-radius:10px;padding:12px;cursor:pointer;font-weight:700;font-size:.86em}
+.btn-right{flex:1;background:#e8f5e8;color:#1a5c1a;border:2px solid #90d090;border-radius:10px;padding:12px;cursor:pointer;font-weight:700;font-size:.86em}
+.btn-skip{width:100%;margin-top:8px;background:transparent;color:#999;border:1px solid #ddd;border-radius:8px;padding:8px;cursor:pointer;font-size:.78em}
+.btn-back{background:#fff;border:1px solid #ddd;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.82em}
+.header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.counter{font-size:.82em;color:#777}
+.deck-block{background:#fff;border-radius:14px;margin-bottom:18px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.deck-header{color:#fff;padding:12px 16px}
+.deck-header .deck-title{font-weight:700;font-size:1em}
+.deck-header .deck-desc{font-size:.78em;opacity:.85;margin-top:2px}
+.deck-cats{padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px}
+.cat-btn{border-radius:8px;padding:7px 12px;cursor:pointer;font-size:.82em;font-weight:600;border-width:1.5px;border-style:solid;text-align:left}
+.cat-btn .mastered{font-size:.75em;opacity:.8;margin-top:2px}
+.progress-summary{background:#fff;border-radius:12px;padding:12px 16px;margin-bottom:14px;box-shadow:0 1px 6px rgba(0,0,0,.07);display:flex;align-items:center;justify-content:space-between}
+.progress-summary .label{font-weight:700;font-size:.88em;color:#1a3a1a}
+.progress-summary .stats{font-size:.78em;color:#555;margin-top:2px}
+.btn-reset{background:#fbeaea;color:#8b1a1a;border:1px solid #f5c0c0;border-radius:7px;padding:5px 10px;cursor:pointer;font-size:.75em;font-weight:600}
+.manage-btn{width:100%;margin-bottom:16px;background:#fff;border:2px dashed #aaa;border-radius:10px;padding:10px;cursor:pointer;color:#555;font-size:.85em;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}
+.img-count{color:#fff;border-radius:20px;padding:1px 8px;font-size:.82em}
+.done-box{background:#fff;border-radius:16px;padding:32px;text-align:center;max-width:340px;box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.done-alltime{background:#f5f5f5;border-radius:10px;padding:10px 14px;margin:12px 0;font-size:.82em;color:#444}
+.done-row{display:flex;gap:10px;margin-top:16px}
+.btn-restart{flex:1;background:#2d6a2d;color:#fff;border:none;border-radius:10px;padding:12px;cursor:pointer;font-weight:700}
+.btn-home{flex:1;background:#eee;color:#333;border:none;border-radius:10px;padding:12px;cursor:pointer;font-weight:700}
+.manage-wrap{max-width:600px;margin:0 auto}
+.manage-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.manage-info{background:#e8f0e8;border:1px solid #b0d0b0;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.82em;color:#2a4a2a}
+.manage-row{background:#fff;border-radius:10px;margin-bottom:9px;padding:10px 14px;box-shadow:0 1px 4px rgba(0,0,0,.07);display:flex;align-items:center;gap:12px}
+.manage-thumb{width:52px;height:52px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#f3f3f3;border:1px solid #eee;display:flex;align-items:center;justify-content:center;font-size:1.5em}
+.manage-thumb img{width:100%;height:100%;object-fit:cover}
+.manage-name{font-weight:700;font-size:.88em;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.manage-cat{font-size:.73em;font-weight:600}
+.manage-btns{display:flex;gap:6px;flex-shrink:0}
+.btn-add{color:#fff;border:none;border-radius:7px;padding:6px 10px;cursor:pointer;font-size:.78em;font-weight:700}
+.btn-remove{background:#fbeaea;color:#8b1a1a;border:1px solid #f5c0c0;border-radius:7px;padding:6px 8px;cursor:pointer;font-size:.78em;font-weight:700}
+@media(max-width:420px){.btn-wrong,.btn-right{font-size:.78em;padding:10px}}
+</style>
+</head>
+<body>
+
+<div id="screen-home" class="screen active">
+  <div class="home-wrap" style="padding-top:20px">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:2.2em">🌿</div>
+      <h1>Envirothon Flashcards</h1>
+      <p class="subtitle">Adirondack Species ID &amp; NPS/BMPs</p>
+    </div>
+    <div id="home-progress" style="display:none" class="progress-summary">
+      <div>
+        <div class="label">📊 Your Progress</div>
+        <div class="stats" id="home-stats"></div>
+      </div>
+      <button class="btn-reset" onclick="resetScores()">Reset</button>
+    </div>
+    <button class="manage-btn" onclick="showManage()">
+      🖼️ Manage Card Images
+      <span id="img-count-badge" class="img-count" style="background:#bbb">0 / 0</span>
+    </button>
+    <div id="deck-list"></div>
+  </div>
+</div>
+
+<div id="screen-card" class="screen">
+  <div class="card-wrap">
+    <div class="header-row">
+      <button class="btn-back" onclick="showHome()">← Home</button>
+      <span class="counter" id="card-counter"></span>
+      <button class="btn-back" onclick="showManage()">🖼️</button>
+    </div>
+    <div class="progress-bar-bg"><div class="progress-bar-fg" id="prog-bar"></div></div>
+    <div class="flashcard">
+      <div class="img-area" id="card-img-area"></div>
+      <div class="question-area"><div class="question-text" id="card-question"></div></div>
+      <div class="answer-area" id="card-answer" style="display:none"></div>
+    </div>
+    <div id="card-controls"></div>
+    <button class="btn-skip" onclick="skipCard()">Skip →</button>
+  </div>
+</div>
+
+<div id="screen-done" class="screen">
+  <div class="center">
+    <div class="done-box">
+      <div style="font-size:3em">🎉</div>
+      <h2 style="margin:10px 0 6px">Deck Complete!</h2>
+      <p style="color:#555;font-size:1.1em" id="done-session"></p>
+      <div class="done-alltime">
+        <div style="font-weight:700;margin-bottom:4px">📊 All-time totals</div>
+        <div id="done-alltime"></div>
+      </div>
+      <div class="done-row">
+        <button class="btn-restart" onclick="restartDeck()">Restart</button>
+        <button class="btn-home" onclick="showHome()">Home</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="screen-manage" class="screen">
+  <div class="manage-wrap">
+    <div class="manage-header">
+      <button class="btn-back" onclick="showHome()">← Back</button>
+      <h2 style="font-size:1.1em;color:#1a3a1a">🖼️ Manage Card Images</h2>
+    </div>
+    <div class="manage-info">
+      <strong>How to add images:</strong> Click "Add" next to any card, choose a photo from your device. Images save in your browser on this device.
+    </div>
+    <div id="manage-list"></div>
+  </div>
+</div>
+
+<input type="file" id="file-input" accept="image/*" style="display:none">
+
+<script>
+const CAT_COLORS={tree:"#2d6a2d",mammal:"#7d5a2c",bird:"#1a5276",amphibian:"#1a6b6b",aquatic:"#1a3a6b",invasive:"#8b1a1a",pest:"#5d1a6b",nps_source:"#b45309",bmp_urban:"#0369a1",bmp_ag:"#4d7c0f",bmp_stream:"#0e7490",policy:"#6d28d9"};
+const CAT_EMOJI={tree:"🌲",mammal:"🦌",bird:"🦅",amphibian:"🐸",aquatic:"💧",invasive:"⚠️",pest:"🪲",nps_source:"☁️",bmp_urban:"🏙️",bmp_ag:"🌾",bmp_stream:"🌊",policy:"⚖️"};
+const DECK_GROUPS={
+  nature:{label:"🌿 Adirondack Species ID",color:"#2d6a2d",desc:"Wildlife, plants & aquatic species of the Adirondack region",
+    cats:{all_nature:"All Species",tree:"🌲 Trees",mammal:"🦌 Mammals",bird:"🦅 Birds",amphibian:"🐸 Amphibians & Reptiles",aquatic:"💧 Aquatic",invasive:"⚠️ Invasives",pest:"🪲 Forest Pests"}},
+  nps:{label:"🌊 NPS Pollution & BMPs",color:"#0369a1",desc:"Non-point source pollution, best management practices & policy",
+    cats:{all_nps:"All NPS/BMP",nps_source:"☁️ NPS Sources",bmp_urban:"🏙️ Urban BMPs",bmp_ag:"🌾 Ag BMPs",bmp_stream:"🌊 Stream BMPs",policy:"⚖️ Policy"}}
+};
+
+const NATURE_CARDS=[
+// ── TREES ──
+{id:1,cat:"tree",name:"Eastern White Pine",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/PinusStrobusNeedles.jpg/500px-PinusStrobusNeedles.jpg",
+front:"What pine has soft needles in bundles of 5, long slender cones, and is the tallest tree in the Northeast?",
+back:"Eastern White Pine (Pinus strobus)\n• 5 needles per bundle — W-H-I-T-E = 5 letters\n• Soft, flexible blue-green needles 3–5 in; cones long and slender 4–8 in\n• Bark: smooth gray when young; deeply furrowed dark blocks when mature\n• NYS state tree; dominant Adirondack reforestation species\n• Horizontal branch whorls; irregular crown with age"},
+
+{id:2,cat:"tree",name:"Sugar Maple",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Autumn_sugar_maple_leaves.jpg/500px-Autumn_sugar_maple_leaves.jpg",
+front:"Which maple has 5-lobed leaves with U-shaped sinuses, opposite branching, and brilliant orange-red fall color?",
+back:"Sugar Maple (Acer saccharum)\n• 5 lobes; U-shaped sinuses (Red Maple = V-shaped)\n• Opposite branching: MAD Horse (Maple, Ash, Dogwood)\n• Fall color: brilliant orange-red-yellow; NYS's signature fall tree\n• Bark: gray, plated and furrowed on mature trees\n• Sap: 2–3% sugar; ~40 gal sap → 1 gal syrup\n• Shade-tolerant climax species of northern hardwood forest"},
+
+{id:3,cat:"tree",name:"Red Maple",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Red_maple_Acer_rubrum_leaves.jpg/500px-Red_maple_Acer_rubrum_leaves.jpg",
+front:"What fast-growing maple has V-shaped leaf sinuses, red twigs and flowers in early spring, and tolerates wet soils?",
+back:"Red Maple (Acer rubrum)\n• 3 main lobes; V-shaped sinuses (sharper than Sugar Maple)\n• First tree to flower in spring — small red clusters before leaves\n• Red petioles, twigs, and paired samaras (May)\n• Bark: smooth silver-gray when young; scaly ridges with age\n• Tolerates wet soils; most abundant tree in eastern North America"},
+
+{id:4,cat:"tree",name:"American Beech",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Beech_-_Fagus_sylvatica_-_geograph.org.uk_-_1070030.jpg/500px-Beech_-_Fagus_sylvatica_-_geograph.org.uk_-_1070030.jpg",
+front:"What tree has smooth silver-gray bark that never furrows even in old age, and produces triangular nuts in spiny husks?",
+back:"American Beech (Fagus grandifolia)\n• Bark: smooth silver-gray ALWAYS — never becomes furrowed\n• Leaves: alternate, elliptical, sharply toothed; marcescent (stay on through winter)\n• Nuts: 2–3 per spiny husk; critical mast for bear, deer, turkey\n• Threatened by: Beech Bark Disease + Beech Leaf Disease (double threat)\n• Shade-tolerant; dominant in climax northern hardwood forests"},
+
+{id:5,cat:"tree",name:"Yellow Birch",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/YellowBirchBark.jpg/500px-YellowBirchBark.jpg",
+front:"What birch has golden-bronze peeling bark, smells like wintergreen when twigs are scratched, and is the most commercially valuable birch in NYS?",
+back:"Yellow Birch (Betula alleghaniensis)\n• Bark: golden-bronze or silver; peels in tight curly horizontal strips\n• Scratch twig → wintergreen scent (methyl salicylate)\n• Leaves: alternate, doubly toothed, ovate\n• Most commercially valuable birch — furniture, flooring\n• Habitat: cool moist slopes and stream banks; dominant in Adirondacks"},
+
+{id:6,cat:"tree",name:"Paper Birch",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Paper_Birch_Betula_papyrifera.jpg/500px-Paper_Birch_Betula_papyrifera.jpg",
+front:"What birch has chalky white bark that peels in papery sheets, and was used by Indigenous peoples for canoes and containers?",
+back:"Paper Birch (Betula papyrifera)\n• Bark: bright chalk-white; peels in papery horizontal sheets\n• Dark horizontal lenticels (breathing pores) on bark\n• Leaves: alternate, ovate, doubly toothed\n• Pioneer species: colonizes disturbed areas and burns\n• Important: beaver food; ruffed grouse eats buds\n• Do NOT peel bark from living trees — damages tree permanently"},
+
+{id:7,cat:"tree",name:"Eastern Hemlock",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Tsuga_canadensis_leaves.jpg/500px-Tsuga_canadensis_leaves.jpg",
+front:"What conifer has short flat needles with two white stripes below, tiny cones, a drooping leader tip, and shades cold-water trout streams?",
+back:"Eastern Hemlock (Tsuga canadensis)\n• Needles: short (~½ in), flat, two white stomatal bands underneath\n• Cones: tiny oval (¾ in) — smallest of any NE conifer\n• Drooping leader tip distinguishes from spruces (stiff tips)\n• Bark: cinnamon-brown, deeply furrowed\n• Keystone species: shades streams → cold water → brook trout habitat\n• Threat: Hemlock Woolly Adelgid spreading north with warming climate"},
+
+{id:8,cat:"tree",name:"Balsam Fir",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Abies_balsamea_1.jpg/500px-Abies_balsamea_1.jpg",
+front:"What conifer has flat needles with two white stripes, upright cones that disintegrate on the tree, and is the classic Christmas tree of the Adirondacks?",
+back:"Balsam Fir (Abies balsamea)\n• Needles: flat, notched tip; two white stomatal bands below; blunt\n• Cones: upright, 2–4 in; disintegrate on tree — never fall whole\n• Bark: smooth gray with resin blisters on young trees\n• Classic Christmas tree fragrance\n• Habitat: cool moist sites; common at higher Adirondack elevations\n• Primary winter browse of moose"},
+
+{id:9,cat:"tree",name:"Red Spruce",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/RedSpruce.jpg/500px-RedSpruce.jpg",
+front:"What spruce has short 4-sided yellowish-green needles, reddish-brown twigs, and is the dominant conifer at high elevations in the Adirondacks?",
+back:"Red Spruce (Picea rubens)\n• Needles: 4-sided (roll between fingers), yellowish-green, curved; ½–⅝ in\n• Twigs: reddish-brown, slightly hairy\n• Cones: 1–2 in; reddish-brown; fall whole unlike fir\n• Dominant high-elevation Adirondack conifer (above 2,500 ft)\n• Acid rain damage: severely impacted by acid deposition in 20th century\n• Recovering under Clean Air Act regulations"},
+
+{id:10,cat:"tree",name:"White Spruce",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Picea_glauca_taiga.jpg/500px-Picea_glauca_taiga.jpg",
+front:"What spruce has 4-sided blue-green needles that smell like skunk when crushed, and is found in northern boreal forests and Adirondack lowlands?",
+back:"White Spruce (Picea glauca)\n• Needles: 4-sided, blue-green, ½–¾ in; smell strongly when crushed\n• Twigs: hairless (unlike Red Spruce)\n• Cones: 1–2 in; pale tan; flexible scales\n• Found in boreal forest and Adirondack lowland bogs/wetlands\n• Often planted for windbreaks and wildlife cover\n• Distinguished from Red Spruce by hairless twigs and bluish color"},
+
+{id:11,cat:"tree",name:"Tamarack",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Larix_laricina_tamarack.jpg/500px-Larix_laricina_tamarack.jpg",
+front:"What is the only deciduous conifer in the Adirondacks — a tree that drops its needles each fall — and grows in cold bogs and wetlands?",
+back:"Tamarack / Eastern Larch (Larix laricina)\n• ONLY deciduous conifer in the Northeast — drops all needles in fall\n• Needles: soft, light blue-green, in tufts of 10–20 on short spurs\n• Turns golden yellow before dropping in October\n• Cones: tiny, upright, egg-shaped (~½ in)\n• Habitat: cold sphagnum bogs, wetland edges, poorly drained soils\n• Wood: very rot-resistant — used for fence posts, boat ribs"},
+
+{id:12,cat:"tree",name:"White Ash",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Fraxinus_americana_leaves.jpg/500px-Fraxinus_americana_leaves.jpg",
+front:"What ash has compound opposite leaves with 5–9 leaflets, diamond-pattern furrowed bark, and is critically threatened by an invasive beetle?",
+back:"White Ash (Fraxinus americana)\n• Opposite compound leaves; 5–9 leaflets; whitish leaf undersides\n• Bark: interlocking diamond-shaped ridges — very distinctive\n• Fruit: single-winged paddle-shaped samara\n• Wood: strong and flexible — baseball bats, tool handles\n• Critically threatened: Emerald Ash Borer kills all 5 NYS ash species\n• Without treatment, nearly all ash in NYS will die"},
+
+{id:13,cat:"tree",name:"Black Ash",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Fraxinus_nigra_range_map.png/300px-Fraxinus_nigra_range_map.png",
+front:"What wetland ash has compound opposite leaves with sessile (stalkless) leaflets and wood used in traditional basket-making by Indigenous peoples?",
+back:"Black Ash (Fraxinus nigra)\n• Opposite compound leaves; 7–11 leaflets; leaflets sessile (no stalk)\n• Bark: corky, soft, scaly — not diamond-patterned like White Ash\n• Habitat: swamps, floodplains, wetland edges\n• Traditional use: Indigenous basket-making — pound wood to separate growth rings\n• Also critically threatened by Emerald Ash Borer\n• NYS wetland indicator species"},
+
+{id:14,cat:"tree",name:"Quaking Aspen",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Populus_tremuloides_leaves.jpg/500px-Populus_tremuloides_leaves.jpg",
+front:"What tree has round leaves on flattened petioles that flutter in the slightest breeze, smooth greenish-white bark, and spreads by root sprouting?",
+back:"Quaking Aspen (Populus tremuloides)\n• Leaves: round with flattened petiole → flutter in slightest breeze\n• Bark: smooth pale green-white; dark eye-shaped scars\n• Clonal: spreads by root sprouting — entire grove can be one organism\n• Pioneer species: first to colonize burned or cleared areas\n• Critical habitat: ruffed grouse, beaver, snowshoe hare all depend on it\n• Widest natural range of any North American tree"},
+
+{id:15,cat:"tree",name:"Bigtooth Aspen",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Populus_grandidentata.jpg/500px-Populus_grandidentata.jpg",
+front:"What aspen has large coarsely toothed leaves (unlike the fine-toothed Quaking Aspen) and similar smooth pale bark and pioneer habitat?",
+back:"Bigtooth Aspen (Populus grandidentata)\n• Leaves: large coarse teeth (5–15 per side) vs. Quaking Aspen's fine teeth\n• Petiole also flattened — leaves tremble in wind\n• Bark: smooth yellowish-gray; becomes furrowed at base with age\n• Habitat: same disturbed/early successional sites as Quaking Aspen\n• Often found growing alongside Quaking Aspen\n• Important ruffed grouse and beaver food"},
+
+{id:16,cat:"tree",name:"Speckled Alder",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Alnus_incana_rugosa_2.jpg/500px-Alnus_incana_rugosa_2.jpg",
+front:"What shrubby streamside tree has dark bark with white speckled lenticels, nitrogen-fixing root nodules, and is critical to stream bank restoration?",
+back:"Speckled Alder (Alnus incana)\n• Bark: dark gray-brown with prominent horizontal white lenticels ('speckles')\n• Catkins: male (long drooping); female (small woody 'cones' persist through winter)\n• Root nodules: fix atmospheric nitrogen — enriches soil\n• Riparian specialist: stabilizes banks, shades water, feeds invertebrates\n• Widely used in stream and wetland restoration\n• American Woodcock: nesting habitat closely associated with alder thickets"},
+
+{id:17,cat:"tree",name:"Black Cherry",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Prunus_serotina_bark.jpg/500px-Prunus_serotina_bark.jpg",
+front:"What tree has dark scaly bark with a distinctive burnt-cornflake smell and texture, and produces small black fruits eaten by many birds and mammals?",
+back:"Black Cherry (Prunus serotina)\n• Bark on mature trees: dark gray-black; breaks into burnt cornflake-like scales\n• Young trees: smooth dark reddish-brown bark with horizontal lenticels\n• Leaves: alternate, lance-shaped; two glands at base of leaf blade\n• Fruits: small dark red-black drupes in drooping clusters; bitter\n• Wildlife value: at least 47 bird species eat the fruit\n• Wood: valuable reddish lumber; furniture and cabinetry\n• Leaves/seeds: contain cyanogenic compounds — toxic to livestock"},
+
+{id:18,cat:"tree",name:"Striped Maple",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Acer_pensylvanicum.jpg/500px-Acer_pensylvanicum.jpg",
+front:"What small understory maple has green bark with distinctive white vertical stripes and large 3-lobed leaves? It's called 'moosewood' because moose browse it heavily.",
+back:"Striped Maple / Moosewood (Acer pensylvanicum)\n• Bark: green with distinctive white-striped vertical lines — unmistakable\n• Leaves: large, 3-lobed, goose-foot shape; finely toothed\n• Small understory tree; rarely exceeds 30 ft\n• Common name 'Moosewood' — favorite moose and deer browse\n• Shade-tolerant understory species of northern hardwood forests\n• Fall color: bright yellow"},
+
+{id:19,cat:"tree",name:"Hop-hornbeam",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Ostrya_virginiana.jpg/500px-Ostrya_virginiana.jpg",
+front:"What small understory tree has shaggy peeling bark in narrow strips and fruit clusters that look like hops? Its wood is extremely hard — earning the name 'ironwood'.",
+back:"Hop-hornbeam / Ironwood (Ostrya virginiana)\n• Bark: grayish-brown; peels in narrow shaggy vertical strips\n• Fruit: papery inflated sacs in hop-like clusters\n• Leaves: alternate, doubly toothed, birch-like\n• Wood: extremely dense and hard — used for tool handles, mallets\n• Small understory tree of dry to mesic hardwood forests\n• Often confused with Musclewood (Carpinus) — check bark and fruit"},
+
+{id:20,cat:"tree",name:"Northern Red Oak",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Quercus_rubra.jpg/500px-Quercus_rubra.jpg",
+front:"What is the most common oak in the Adirondack region, with pointed lobed leaves and large acorns that take two years to mature?",
+back:"Northern Red Oak (Quercus rubra)\n• Leaves: 7–11 lobes with pointed bristle tips (White Oak group = rounded lobes)\n• Acorns: large, flat-capped; take 2 years to mature\n• Bark: dark gray with flat-topped ridges; inner bark reddish\n• Fall color: deep red\n• Mast crop: critical food for deer, turkey, bear, squirrels\n• Most common and fastest-growing oak in NYS\n• Timber: important commercial hardwood"},
+
+{id:21,cat:"tree",name:"Serviceberry",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Amelanchier_canadensis.jpg/500px-Amelanchier_canadensis.jpg",
+front:"What shrub or small tree is one of the first to bloom in spring with white flowers, produces edible blueberry-like fruits, and has smooth gray bark?",
+back:"Serviceberry / Juneberry (Amelanchier spp.)\n• First woody plant to flower each spring — white 5-petaled clusters\n• Fruits: small purple-red pomes, June–July; edible and sweet\n• Bark: smooth gray, often with subtle vertical streaking\n• Leaves: alternate, oval, finely toothed\n• Wildlife value: fruits eaten by 40+ bird species; deer browse foliage\n• Name 'serviceberry': blooms when ground thaws — old timing for burial services\n• Common in forest edges, rocky slopes, wetland borders"},
+
+{id:22,cat:"tree",name:"Mountain Maple",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Acer_spicatum.jpg/500px-Acer_spicatum.jpg",
+front:"What small shrubby maple grows in cool moist mountain forests, has 3-lobed coarsely toothed leaves, and produces upright flower/fruit clusters?",
+back:"Mountain Maple (Acer spicatum)\n• Small shrubby maple; rarely exceeds 25 ft\n• Leaves: 3-lobed, coarsely toothed; similar to striped maple but smaller\n• Flowers/fruit: upright erect clusters (unlike drooping clusters of other maples)\n• Bark: grayish-brown; not striped\n• Habitat: cool moist ravines and mountain slopes; Adirondack common\n• Important deer and moose browse species\n• Fall color: orange to red"},
+
+{id:23,cat:"tree",name:"Gray Birch",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Betula_populifolia.jpg/500px-Betula_populifolia.jpg",
+front:"What birch has dull white bark that does NOT peel, dark triangular patches below branch bases, and is a pioneer of disturbed sites?",
+back:"Gray Birch (Betula populifolia)\n• Bark: dull grayish-white; does NOT peel like Paper Birch\n• Distinctive dark triangular patches (chevrons) below branch attachments\n• Leaves: triangular, long-tipped, doubly toothed\n• Short-lived pioneer: colonizes old fields, burns, roadsides\n• Often multi-stemmed\n• Distinguished from Paper Birch by: non-peeling bark, triangular patches, triangular leaf shape\n• Habitat: dry, poor soils — tolerates harsh conditions"},
+
+{id:24,cat:"tree",name:"Red Spruce vs Balsam Fir",img:"",
+front:"At a glance, how do you tell Red Spruce from Balsam Fir in the Adirondack high-elevation forest? Give 3 ID features for each.",
+back:"Red Spruce (Picea rubens):\n• Needles: 4-sided, sharp — roll between fingers; yellowish-green\n• Needles attached to woody pegs (leave bumpy twig when pulled off)\n• Cones: hang downward; fall whole\n\nBalsam Fir (Abies balsamea):\n• Needles: flat, 2-ranked, blunt-tipped; two white stripes below\n• Needles leave smooth circular scar when pulled off\n• Cones: upright; disintegrate on tree (scales fall separately)\n\nMemory trick: Fir = Flat, Friendly (blunt); Spruce = Sharp, Stiff, Square"},
+
+{id:25,cat:"tree",name:"Alternate-leaved Dogwood",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Cornus_alternifolia2.jpg/500px-Cornus_alternifolia2.jpg",
+front:"What is the only dogwood with ALTERNATE leaves (all other dogwoods are opposite), with horizontally tiered branches and blue-black berries?",
+back:"Alternate-leaved Dogwood / Pagoda Dogwood (Cornus alternifolia)\n• Only dogwood with alternate leaves — all other dogwoods have opposite\n• Branches: strongly horizontal, tiered — pagoda silhouette\n• Leaves: alternate, clustered near branch tips; oval with arcuate veins\n• Berries: blue-black on red stems; eaten by many birds\n• Bark: greenish-gray; can have reddish streaking\n• Habitat: forest edges, understory, stream banks\n• Fall color: reddish-purple"},
+
+// ── MAMMALS ──
+{id:26,cat:"mammal",name:"North American Beaver",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/American_Beaver.jpg/500px-American_Beaver.jpg",
+front:"What is NYS's largest rodent, and what are three ecological roles it plays as an ecosystem engineer?",
+back:"North American Beaver (Castor canadensis)\n• Largest NYS rodent — up to 60+ lbs\n• Ecosystem engineer roles:\n  1. Dam building creates ponds and wetlands — increases biodiversity\n  2. Raises local water table; recharges groundwater\n  3. Ponds trap sediment and nutrients — natural water quality BMPs\n• Flat paddle tail; webbed hind feet; large orange incisors\n• Reintroduced to NYS after extirpation by fur trade"},
+
+{id:27,cat:"mammal",name:"White-tailed Deer",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/White_tailed_deer.jpg/500px-White_tailed_deer.jpg",
+front:"What ungulate is the most common large mammal in NYS, and what are three signs of forest overabundance?",
+back:"White-tailed Deer (Odocoileus virginianus)\n• Most common large mammal in NYS\n• Signs of overabundance:\n  1. Browse line: understory stripped to ~5 ft\n  2. Loss of native wildflowers and tree seedlings\n  3. Spread of deer-resistant invasives (garlic mustard, barberry)\n• Antlers on bucks only; white underside of tail = alarm flag\n• NYS state mammal; hunting is primary population control"},
+
+{id:28,cat:"mammal",name:"Black Bear",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Black_bear_large.jpg/500px-Black_bear_large.jpg",
+front:"What is the largest land predator in the Adirondacks, and how does it survive winter — is it true hibernation?",
+back:"American Black Bear (Ursus americanus)\n• Largest Adirondack land predator; males 150–400+ lbs\n• NOT true hibernation — enters torpor:\n  - Body temp drops slightly (not dramatically like true hibernators)\n  - Can be aroused if disturbed\n  - Does not eat/drink/urinate for months\n• Hyperphagia in fall: eats up to 20,000 cal/day before denning\n• Omnivore: berries, mast, insects, carrion, occasionally fawns\n• Color: entirely black in Northeast (not brown)"},
+
+{id:29,cat:"mammal",name:"Moose",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Bull_moose_superior_np.jpg/500px-Bull_moose_superior_np.jpg",
+front:"What is the largest member of the deer family in NYS, and what serious health threat is increasing as Adirondack winters warm?",
+back:"Moose (Alces alces)\n• Largest deer family member; bulls up to 1,200 lbs in NYS\n• ID: massive body; long bulbous nose; dewlap ('bell') from throat\n• Antlers: broad palmated (males only); shed each winter\n• Browse: aquatic vegetation, willows, balsam fir\n• Threat: Winter tick (Dermacentor albipictus)\n  - Thousands of ticks per animal → severe blood loss\n  - 'Ghost moose': hair loss from rubbing → hypothermia\n  - Warmer winters → higher tick survival → increasing problem"},
+
+{id:30,cat:"mammal",name:"Fisher",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Martes_pennanti_1.jpg/500px-Martes_pennanti_1.jpg",
+front:"What large dark mustelid is the only effective predator of porcupines, was reintroduced to the Adirondacks, and is neither a fish nor a cat?",
+back:"Fisher (Pekania pennanti)\n• Large mustelid; males 8–16 lbs; females much smaller\n• Dark brown-black fur; pointed face; long bushy tail\n• One of few predators that kills porcupines (attacks face repeatedly)\n• Also eats: snowshoe hare, squirrels, birds, carrion\n• Reintroduced to Adirondacks 1946–61 after extirpation\n• Excellent tree climber; uses hollow logs and tree cavities\n• Name possibly from Dutch 'fisse' (European polecat)"},
+
+{id:31,cat:"mammal",name:"River Otter",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/River_otter.jpg/500px-River_otter.jpg",
+front:"What semi-aquatic mustelid is the top aquatic predator in Adirondack streams, and is an indicator of clean water and healthy fish populations?",
+back:"North American River Otter (Lontra canadensis)\n• Long streamlined body; thick tapering tail; webbed feet\n• Dense underfur + guard hairs keep skin dry while swimming\n• Diet: fish (primary), crayfish, frogs, aquatic invertebrates\n• Indicator species: presence = healthy water quality + fish populations\n• Reintroduced to many NYS watersheds after extirpation\n• Playful: slides on mud/snow banks; strong social bonds\n• Can stay submerged 3–4 minutes"},
+
+{id:32,cat:"mammal",name:"Eastern Coyote",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Eastern_Coyote.jpg/500px-Eastern_Coyote.jpg",
+front:"What canid now fills the top predator role across much of NYS, is larger than western coyotes due to wolf hybridization, and is highly adaptable?",
+back:"Eastern Coyote (Canis latrans × lupus hybrid)\n• Larger than western coyote — 35–55 lbs; wolf genetics\n• Gray-brown with rusty legs; bushy tail carried downward (wolves carry up)\n• Highly adaptable: forests, suburbs, farmland\n• Opportunistic omnivore: deer, rabbits, rodents, fruit, garbage\n• Pack hunting allows taking white-tailed deer\n• Vocalizations: yips, howls, barks — often heard at dusk/dawn\n• Now NYS's primary large predator in most areas"},
+
+{id:33,cat:"mammal",name:"Bobcat",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Bobcat2.jpg/500px-Bobcat2.jpg",
+front:"What is NYS's only native wild cat, identifiable by its short bobbed tail, tufted ears, and spotted coat?",
+back:"Bobcat (Lynx rufus)\n• NYS's only native wild cat; 15–35 lbs\n• Short 'bobbed' tail (3–6 in) with black tip on top, white below\n• Ear tufts shorter than Canada Lynx\n• Spotted/streaked tawny brown coat\n• Diet: primarily snowshoe hare and cottontail; also deer, birds\n• Solitary; territorial; tracks show retracted claws (unlike dog tracks)\n• Habitat: rocky ledges, dense thickets, mixed forest\n• Threatened species in some NYS regions"},
+
+{id:34,cat:"mammal",name:"Snowshoe Hare",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Lepus_americanus_5459_cropped.jpg/500px-Lepus_americanus_5459_cropped.jpg",
+front:"What boreal mammal turns white in winter, has large hind feet for moving on snow, and undergoes dramatic population cycles every 10 years?",
+back:"Snowshoe Hare (Lepus americanus)\n• Turns white in winter; brown in summer — matches seasonal background\n• Large hind feet: act as snowshoes for moving on deep snow\n• 10-year population cycle: driven by food availability and predator pressure\n• Primary prey of: Canada Lynx, bobcat, great horned owl, fisher\n• Diet: grasses, clover, shrubs; twigs and bark in winter\n• Habitat: dense boreal forest and alder thickets\n• Born precocial (fully furred, eyes open) unlike rabbits"},
+
+{id:35,cat:"mammal",name:"Porcupine",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Porcupine-BioDiversity.jpg/500px-Porcupine-BioDiversity.jpg",
+front:"What slow-moving rodent is covered in 30,000 quills, gnaws on tree bark in winter causing significant forest damage, and is a key fisher prey item?",
+back:"North American Porcupine (Erethizon dorsatum)\n• ~30,000 barbed quills — raise when threatened; cannot throw them\n• Quills: loosely attached, detach on contact; barbs make removal painful\n• Winter diet: bark and cambium of trees — especially hemlock and pine\n• Can girdle and kill trees by stripping bark in rings\n• Slow-moving; relies on quills rather than speed\n• Primary predator: fisher (attacks face where no quills)\n• Active year-round; does not hibernate"},
+
+{id:36,cat:"mammal",name:"Mink",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Neovison_vison.jpg/500px-Neovison_vison.jpg",
+front:"What small semi-aquatic mustelid has rich dark brown fur, a white chin patch, and hunts fish, frogs, and muskrats along Adirondack streams?",
+back:"American Mink (Neogale vison)\n• Small mustelid; 1.5–3.5 lbs; males larger than females\n• Rich dark chocolate-brown fur; white chin patch\n• Semi-aquatic: webbed toes; dense water-resistant fur\n• Diet: fish, frogs, crayfish, muskrats, birds, small mammals\n• Habitat: streams, ponds, wetland edges\n• Indicator of healthy aquatic systems\n• Strong musky scent from anal glands\n• Tracks: 5 toes; often found in mud along water"},
+
+{id:37,cat:"mammal",name:"Muskrat",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Muskrat_on_bank.jpg/500px-Muskrat_on_bank.jpg",
+front:"What large semi-aquatic rodent builds dome-shaped lodges of cattails, has a laterally flattened tail, and is an important wetland engineer?",
+back:"Muskrat (Ondatra zibethicus)\n• Medium-sized rodent; 2–4 lbs\n• Tail: long, hairless, laterally flattened — used as rudder while swimming\n• Builds dome lodges of cattails and mud in wetlands\n• Diet: primarily aquatic vegetation (cattails, bulrushes); also crayfish, frogs\n• Feeding platforms (rafts of vegetation) visible in marshes\n• Wetland engineer: lodge building and feeding creates open water patches\n• Important furbearer; also prey for mink, otter, great horned owl"},
+
+{id:38,cat:"mammal",name:"Raccoon",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Raccoon_Procyon_lotor.jpg/500px-Raccoon_Procyon_lotor.jpg",
+front:"What masked omnivore has a ringed tail, highly dexterous front paws, and is one of NYS's most adaptable and intelligent mammals?",
+back:"Raccoon (Procyon lotor)\n• Black facial mask; bushy tail with 4–7 dark rings\n• Front paws: highly dexterous — can open containers and latches\n• Omnivore: crayfish, frogs, fish, eggs, fruit, corn, garbage\n• Often 'washes' food in water (sensory behavior, not cleaning)\n• Habitat: nearly everywhere — forest, wetlands, urban areas\n• Important vector: rabies, distemper, roundworm (Baylisascaris)\n• Tracks: distinctive 5-toed hand-like print"},
+
+{id:39,cat:"mammal",name:"Striped Skunk",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Mephitis_mephitis_-_Ritch_Grissom_Memorial_Wetlands_at_Viera%2C_Florida.jpg/500px-Mephitis_mephitis_-_Ritch_Grissom_Memorial_Wetlands_at_Viera%2C_Florida.jpg",
+front:"What black-and-white mammal can spray a sulfur-containing chemical up to 15 feet, stomps its feet as a warning display, and is a primary rabies vector?",
+back:"Striped Skunk (Mephitis mephitis)\n• Black with white V-stripe down back; bushy tail\n• Warning display: stomps feet, raises tail, arches back before spraying\n• Spray: thiols (sulfur compounds) from anal glands; range up to 15 ft\n• Musk neutralizer: hydrogen peroxide + baking soda + dish soap\n• Omnivore: insects, small mammals, eggs, fruit, carrion\n• Primary rabies vector in NYS along with raccoon and bat\n• Partially dormant in winter (not true hibernation)"},
+
+{id:40,cat:"mammal",name:"Little Brown Bat",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Little_brown_bat_with_white_nose.jpg/500px-Little_brown_bat_with_white_nose.jpg",
+front:"What is NYS's most common bat, roosts in colonies in buildings and caves, and has been devastated by a fungal disease killing millions across North America?",
+back:"Little Brown Bat (Myotis lucifugus)\n• Wingspan ~9 in; glossy brown fur; small ears\n• Roosts: colonies in buildings (maternity), caves/mines (hibernation)\n• Echolocation: ultrasonic pulses locate insects in darkness\n• Diet: insects; eats up to 1,000 mosquito-sized insects per hour\n• White-nose Syndrome: fungus Pseudogymnoascus destructans\n  - White growth on muzzle/wings during hibernation\n  - Disrupts hibernation → starvation → death\n  - Populations down 90%+ in affected caves\n• Now state and federally listed as endangered"},
+
+// ── BIRDS ──
+{id:41,cat:"bird",name:"Bald Eagle",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Bald_Eagle_Portrait.jpg/500px-Bald_Eagle_Portrait.jpg",
+front:"What large raptor nests near water bodies, takes 5 years to develop its white head and tail, and made a remarkable recovery after DDT was banned?",
+back:"Bald Eagle (Haliaeetus leucocephalus)\n• Adult: white head and tail; dark brown body; yellow beak and talons\n• Juvenile: mottled brown — 5 years to reach adult plumage\n• Wingspan: 6–8 ft; soars with flat wings (vultures = V shape)\n• Diet: fish (primary), waterfowl, carrion\n• Nest (eyrie): massive stick nest; returns annually; can weigh 1+ ton\n• DDT ban (1972) + ESA protection → dramatic rebound\n• NYS: 300+ nesting pairs today"},
+
+{id:42,cat:"bird",name:"Common Loon",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gavia_immer_-Minocqua%2C_Wisconsin%2C_USA_-swimming-8.jpg/500px-Gavia_immer_-Minocqua%2C_Wisconsin%2C_USA_-swimming-8.jpg",
+front:"What diving bird produces a haunting wail, nests directly on the water's edge, and is sensitive to mercury, acid rain, and lead sinkers?",
+back:"Common Loon (Gavia immer)\n• Breeding: checkered black-and-white back; black head; red eye\n• Winter: plain gray-brown above, white below\n• Calls: tremolo (alarm), wail (contact), yodel (territorial male)\n• Legs set far back — expert diver to 60m; nearly helpless on land\n• Nest: mound at water's edge — vulnerable to water level changes\n• Threats: mercury bioaccumulation, lead sinkers, acid rain reducing fish\n• Adirondack lakes: important nesting stronghold in Northeast"},
+
+{id:43,cat:"bird",name:"Osprey",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Osprey_-_natures_pics.jpg/500px-Osprey_-_natures_pics.jpg",
+front:"What fish-eating raptor dives feet-first into water, has a reversible outer toe to grip slippery fish, and was nearly eliminated by DDT?",
+back:"Osprey (Pandion haliaetus)\n• Brown above, white below; dark wrist patches; white head with dark eye stripe\n• Reversible outer toe + spiny foot pads for gripping fish\n• Dramatic feet-first plunge-dive; can submerge completely\n• Carries fish head-forward to reduce drag in flight\n• DDT nearly eliminated — fully recovered after 1972 ban\n• Diet: almost exclusively fish — a true fishing specialist\n• Nests on tall structures near water; large stick nest"},
+
+{id:44,cat:"bird",name:"Great Blue Heron",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Great_Blue_Heron_arp.jpg/500px-Great_Blue_Heron_arp.jpg",
+front:"What is the largest heron in North America — stands motionless in streams to hunt fish and nests in colonial rookeries?",
+back:"Great Blue Heron (Ardea herodias)\n• Tallest bird commonly seen in NYS — up to 4.5 ft\n• Blue-gray body; white face; black eye plume; yellow-orange beak\n• Flies with neck folded in S-curve (cranes fly with neck extended)\n• Stands motionless; lightning-fast stab to catch fish, frogs, voles\n• Rookeries: 20–500 nesting pairs in tall trees; returns annually\n• Year-round in many NYS areas; some migrate south"},
+
+{id:45,cat:"bird",name:"Ruffed Grouse",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Ruffed_Grouse_-_Pam_Kaminski.jpg/500px-Ruffed_Grouse_-_Pam_Kaminski.jpg",
+front:"What ground-dwelling forest bird 'drums' by beating its wings on a log, depends on young aspen habitat, and grows toe fringes as winter snowshoes?",
+back:"Ruffed Grouse (Bonasa umbellus)\n• Round body; small crest; banded tail; ruffs on neck (males)\n• 'Drumming': male beats wings on log → accelerating thumping\n• Habitat: young forest with dense shrubs and aspen — not old growth\n• Winter adaptations:\n  - Dives into snow to roost (insulation)\n  - Grows pectinations (fringes) on toes as snowshoes\n• Diet: varies seasonally — berries, buds, catkins, insects\n• Explosive flushing flight — startles predators and observers"},
+
+{id:46,cat:"bird",name:"Wild Turkey",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Wild_turkey_eastern_US.jpg/500px-Wild_turkey_eastern_US.jpg",
+front:"What large game bird was extirpated from NYS and successfully reintroduced, with males displaying fan-shaped tails and bright red/blue head wattles?",
+back:"Wild Turkey (Meleagris gallopavo)\n• Largest native game bird in North America; males 16–24 lbs\n• Male (tom): iridescent bronze plumage; bare red/blue head; beard; spurs\n• Fan-shaped tail display during spring courtship\n• Extirpated from NYS by early 1900s; reintroduced 1959–1988\n• Now abundant statewide — one of the great wildlife recovery stories\n• Diet: mast (acorns), seeds, insects, small vertebrates\n• Roost in trees at night; surprisingly fast runners and fliers"},
+
+{id:47,cat:"bird",name:"Great Horned Owl",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Great_horned_owl_Jan_2012_Colorado.jpg/500px-Great_horned_owl_Jan_2012_Colorado.jpg",
+front:"What is the largest owl in the Adirondacks, with prominent ear tufts, yellow eyes, and a call that's the classic 'hoo-hoo-hoo' of the forest?",
+back:"Great Horned Owl (Bubo virginianus)\n• Largest common owl in NYS; wingspan up to 5 ft\n• Large yellow eyes; prominent ear tufts (not ears)\n• Call: deep resonant 'hoo-hoo-hooo-hoo' — often calls in December\n• Diet: skunks, rabbits, squirrels, ducks, other raptors (even other owls)\n• Begins nesting in January–February — earliest nesting bird in NYS\n• Uses abandoned hawk or crow nests; no nest building\n• Powerful talons: 300 lb/sq in grip pressure"},
+
+{id:48,cat:"bird",name:"Barred Owl",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Barred_Owl_in_Prospect_Park.jpg/500px-Barred_Owl_in_Prospect_Park.jpg",
+front:"What large owl has brown-and-white barring on its chest, dark brown eyes (not yellow), and calls 'Who cooks for you, who cooks for you-all?'",
+back:"Barred Owl (Strix varia)\n• Brown-and-white horizontal barring on upper chest; streaking below\n• Dark brown eyes — only large owl in eastern North America with dark eyes\n• Call: 'Who cooks for you, who cooks for you-all' — very distinctive\n• Habitat: mature forest near water; riparian zones\n• Diet: small mammals, frogs, fish, crayfish, birds\n• Often calls during day as well as night\n• Expanding range northward; now common in Adirondacks\n• Competes with (and hybridizes with) Spotted Owl in Pacific Northwest"},
+
+{id:49,cat:"bird",name:"Pileated Woodpecker",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Pileated_Woodpecker_male_RWD2.jpg/500px-Pileated_Woodpecker_male_RWD2.jpg",
+front:"What crow-sized woodpecker has a flaming red crest, and excavates large rectangular holes in dead trees searching for carpenter ants?",
+back:"Pileated Woodpecker (Dryocopus pileatus)\n• Largest woodpecker in North America (crow-sized)\n• Flaming red crest; black body; white neck stripes\n• Males: red mustache stripe; females: black mustache stripe\n• Excavates large rectangular/oval cavities in dead snags\n• Primary prey: carpenter ants (Camponotus) in decaying wood\n• Call: loud jungle-like 'kuk-kuk-kuk'; very territorial\n• Cavities used by: wood ducks, owls, pine martens, flying squirrels\n• Requires large-diameter dead snags — old-growth indicator"},
+
+{id:50,cat:"bird",name:"American Woodcock",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Scolopax_minor_2.jpg/500px-Scolopax_minor_2.jpg",
+front:"What chunky shorebird lives in alder thickets and forest edges, performs a spectacular spiraling sky dance at dusk in spring, and probes mud for earthworms?",
+back:"American Woodcock (Scolopax minor)\n• Chunky; long bill; huge eyes set high on head for 360° vision\n• Bill: flexible tip feels for earthworms in soft soil\n• Spring sky dance: males spiral up 200–300 ft at dusk, then plunge\n• Habitat: young forest, alder thickets, moist woods near clearings\n• Closely associated with Speckled Alder stands\n• Eyes positioned high and back — can see predators while bill is in ground\n• Cryptic plumage: nearly invisible on leaf litter"},
+
+{id:51,cat:"bird",name:"Common Merganser",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Mergus_merganser_-_Trout_lake_-_8.jpg/500px-Mergus_merganser_-_Trout_lake_-_8.jpg",
+front:"What large diving duck has a serrated 'saw-bill' for holding slippery fish, with males showing a green head and females showing a rusty-red crested head?",
+back:"Common Merganser (Mergus merganser)\n• Large diving duck; serrated bill for gripping fish\n• Male: dark green head (iridescent); white body; red bill\n• Female: rusty-red crested head; gray body; white chin patch\n• Diet: fish — expert underwater pursuit diver\n• Habitat: clear cold rivers and lakes — excellent water quality indicator\n• Nests in tree cavities near water\n• Abundant on Adirondack lakes and rivers spring–fall\n• Common winter resident on large open water"},
+
+{id:52,cat:"bird",name:"Wood Duck",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Wood_Duck_-_Aix_sponsa%2C_Merced_National_Wildlife_Refuge%2C_Los_Banos%2C_California.jpg/500px-Wood_Duck_-_Aix_sponsa%2C_Merced_National_Wildlife_Refuge%2C_Los_Banos%2C_California.jpg",
+front:"What colorful cavity-nesting duck has a crested iridescent head on the male, nests in tree holes, and uses nest boxes widely installed along Adirondack wetlands?",
+back:"Wood Duck (Aix sponsa)\n• Male: stunning iridescent green-purple-chestnut plumage; red eye\n• Female: gray-brown; white teardrop eye ring\n• Only common North American duck that nests in tree cavities\n• Ducklings jump from nest cavity to ground/water within 24 hours of hatching\n• Nest boxes: major conservation success; populations rebounded after overhunting\n• Habitat: wooded swamps, beaver ponds, slow rivers\n• Diet: acorns, seeds, aquatic invertebrates"},
+
+{id:53,cat:"bird",name:"Spruce Grouse",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Spruce_grouse_fed.jpg/500px-Spruce_grouse_fed.jpg",
+front:"What boreal grouse is found in dense spruce-fir forests at higher elevations, is often called 'fool hen' for its tameness, and has a distinctive red eye comb?",
+back:"Spruce Grouse (Falcipennis canadensis)\n• Boreal specialist: dense spruce-fir forest — Adirondack high elevations\n• Male: black chest; red eye comb; white-spotted sides\n• Female: brown barred; well camouflaged\n• Diet: primarily conifer needles (especially spruce and fir)\n• 'Fool hen': extremely tame and approachable — unusual for grouse\n• NYS Species of Special Concern — limited range in Adirondacks\n• Indicator of mature boreal forest habitat"},
+
+{id:54,cat:"bird",name:"Common Nighthawk",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Common_Nighthawk_on_Post.jpg/500px-Common_Nighthawk_on_Post.jpg",
+front:"What aerial insectivore has long pointed wings with white wing patches, flies erratically at dusk, and makes a booming sound by diving during courtship?",
+back:"Common Nighthawk (Chordeiles minor)\n• Despite name: not a hawk; related to whip-poor-will\n• Long pointed wings with bold white bar near tip\n• Cryptic mottled brown-gray plumage; large eyes; tiny bill\n• Active at dusk and dawn; erratic bat-like flight catching insects\n• Call: nasal 'peent' repeated in flight\n• Courtship display: male dives steeply → boom from wind through flight feathers\n• Nests on flat gravel rooftops and bare ground\n• Declining due to insect declines and urban development"},
+
+{id:55,cat:"bird",name:"Black-capped Chickadee",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Black-capped_Chickadee_-_natures_pics.jpg/500px-Black-capped_Chickadee_-_natures_pics.jpg",
+front:"What small resident bird has a black cap and bib, white cheeks, and gives a 'chick-a-dee-dee-dee' alarm call whose dee count signals danger level?",
+back:"Black-capped Chickadee (Poecile atricapillus)\n• Black cap and bib; white cheeks; gray back; buffy sides\n• Year-round Adirondack resident; forms winter flocks\n• Alarm call: 'chick-a-dee-dee-dee' — more 'dees' = greater threat\n• Song: clear whistled 'fee-bee' (two notes)\n• Chickadee flocks are 'information centers' for other species\n• Stores thousands of food items; hippocampus enlarges in fall\n• Lowers body temp at night (regulated hypothermia) to save energy\n• NYS state bird of Massachusetts; beloved across region"},
+
+{id:56,cat:"bird",name:"Blue Jay",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Blue_jay_in_PP_%2830960%29.jpg/500px-Blue_jay_in_PP_%2830960%29.jpg",
+front:"What bold blue corvid has a black necklace, blue crest, and is both a major acorn disperser and a loud alarm sentinel for the forest?",
+back:"Blue Jay (Cyanocitta cristata)\n• Bright blue above; white below; black necklace; blue crest\n• Loud and bold: complex vocalizations including hawk mimicry\n• Important acorn disperser: buries thousands per year; aids oak regeneration\n• Omnivore: acorns, seeds, insects, eggs, small vertebrates\n• Migratory in some regions; partial migrant in NYS\n• Social and intelligent; lives in family groups\n• Will mob owls and hawks — effective early warning for other birds"},
+
+{id:57,cat:"bird",name:"American Robin",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Turdus-migratorius-002.jpg/500px-Turdus-migratorius-002.jpg",
+front:"What thrush with an orange-red breast is one of the most familiar birds across North America and is often considered a herald of spring?",
+back:"American Robin (Turdus migratorius)\n• Orange-red breast; dark gray-black back; yellow bill\n• Males darker than females\n• Song: cheerily, cheer-up, cheerio — rich melodic phrases\n• Diet: earthworms (pulled from soil); fruits and berries in fall/winter\n• Some winter in NYS (feeding on fruiting shrubs)\n• One of the first birds to sing at dawn — part of dawn chorus\n• Nest: mud cup lined with fine grass; 3–4 blue eggs\n• State bird of Connecticut, Michigan, and Wisconsin"},
+
+{id:58,cat:"bird",name:"Common Raven",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Raven_Quoth.jpg/500px-Raven_Quoth.jpg",
+front:"How do you tell a Common Raven from an American Crow? Give 4 field marks and note which is more common in the Adirondacks.",
+back:"Common Raven (Corvus corax) vs. American Crow (C. brachyrhynchos)\n\nRaven:\n• Much larger (goose-sized); thick heavy bill\n• Wedge-shaped tail (in flight)\n• Deep croaking 'kronk' call\n• Shaggy throat feathers (hackles)\n• Soars like a hawk\n\nCrow:\n• Smaller (pigeon-sized); thinner bill\n• Fan-shaped tail\n• Classic 'caw-caw' call\n• Does not soar\n\nAdirondacks: Ravens are COMMON at Paul Smiths and high elevations; Crows more common in lowlands and farms"},
+
+{id:59,cat:"bird",name:"American Crow",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Corvus-brachyrhynchos-001.jpg/500px-Corvus-brachyrhynchos-001.jpg",
+front:"What all-black corvid is highly intelligent, lives in large communal roosts in winter, and is the primary host for West Nile Virus in the Northeast?",
+back:"American Crow (Corvus brachyrhynchos)\n• All black; fan-shaped tail in flight; 'caw' call\n• Highly intelligent: tool use, problem solving, facial recognition\n• Social: large winter roosts of thousands\n• Omnivore: roadkill, garbage, grain, eggs, insects, small animals\n• West Nile Virus: highly susceptible; die-offs signaled WNV arrival in NYS (1999)\n• Mob raptors (hawks and owls) aggressively\n• Family groups: juveniles help parents raise next brood"},
+
+{id:60,cat:"bird",name:"Dark-eyed Junco",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Dark-eyed_junco_in_Central_Park_2.jpg/500px-Dark-eyed_junco_in_Central_Park_2.jpg",
+front:"What 'snowbird' sparrow has dark gray plumage with white outer tail feathers that flash in flight, and breeds in Adirondack conifer forests?",
+back:"Dark-eyed Junco (Junco hyemalis)\n• Dark slate-gray above; white belly; white outer tail feathers flash in flight\n• Pink bill\n• Called 'snowbird' — often arrives in lowlands with first snow\n• Breeds in Adirondack conifer and mixed forests\n• Forages on ground; scratches leaf litter for seeds\n• Song: simple trill on one pitch\n• Forms flocks in winter — often with other sparrows\n• Nests on or near ground; concealed under vegetation"},
+
+{id:61,cat:"bird",name:"White-throated Sparrow",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Zonotrichia_albicollis_CT3.jpg/500px-Zonotrichia_albicollis_CT3.jpg",
+front:"What large sparrow has a bold white throat patch, yellow lores (between eye and bill), and sings a clear 'Old Sam Peabody, Peabody, Peabody' song?",
+back:"White-throated Sparrow (Zonotrichia albicollis)\n• Clean white throat; yellow lore spot; striped crown (tan or white)\n• Song: clear whistled 'Old Sam Peabody, Peabody' or 'Oh sweet Canada'\n• Breeds in Adirondack and boreal forest edges and shrubby clearings\n• Common migrant and winter visitor throughout NYS\n• Forages on ground; scratches for seeds and insects\n• Forms mixed flocks with juncos and other sparrows in winter\n• Two color morphs: white-striped and tan-striped crown"},
+
+{id:62,cat:"bird",name:"Cedar Waxwing",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Cedar_Waxwing_-_Bombycilla_cedrorum.jpg/500px-Cedar_Waxwing_-_Bombycilla_cedrorum.jpg",
+front:"What sleek crested bird has a black mask, yellow tail tip, red waxy wing tips, and travels in nomadic flocks following fruiting trees?",
+back:"Cedar Waxwing (Bombycilla cedrorum)\n• Sleek crested; warm brown; black mask; yellow tail tip\n• Red waxy droplets on secondary feathers (visible close-up)\n• Travels in nomadic flocks following fruiting shrubs and trees\n• Diet: primarily fruit year-round — serviceberry, cedar berries, crabapple\n• Can become intoxicated from fermenting fruit\n• High-pitched thin 'sreee' call — often heard before seen\n• Passes berries beak-to-beak along perched flock (courtship)\n• No fixed territory — follows food resources"},
+
+{id:63,cat:"bird",name:"Red-winged Blackbird",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Redwing_blackbird.jpg/500px-Redwing_blackbird.jpg",
+front:"What marsh-nesting blackbird has males with bright red and yellow shoulder patches, arrives early in spring, and is one of the most abundant birds in North America?",
+back:"Red-winged Blackbird (Agelaius phoeniceus)\n• Male: all black with red/yellow shoulder epaulets — flashed in display\n• Female: heavily streaked brown — easily mistaken for sparrow\n• Call: raspy 'konk-la-ree' — iconic sound of spring wetlands\n• One of the most abundant birds in North America\n• Arrives early March — one of first spring migrants\n• Habitat: marshes, wet meadows, roadsides, agricultural fields\n• Polygynous: one male may have several females nesting in his territory\n• Winter flocks: millions congregate in southern US"},
+
+{id:64,cat:"bird",name:"Purple Finch",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Purple_Finch_%28Haemorhous_purpureus%29_-_Guelph%2C_Ontario.jpg/500px-Purple_Finch_%28Haemorhous_purpureus%29_-_Guelph%2C_Ontario.jpg",
+front:"What finch has a raspberry-red male (not purple) that breeds in Adirondack conifer forests — and how does it differ from the similar House Finch?",
+back:"Purple Finch (Haemorhous purpureus)\n• Male: deep raspberry-red head and breast; NOT purple\n• Female: bold white eyebrow stripe; heavy brown streaking\n• Breeds in Adirondack conifer and mixed forests\n\nPurple vs. House Finch:\n• Purple: heavier bill; notched tail; male raspberry to crown\n• House: smaller bill; squared tail; male red confined to head/breast/rump; streaked sides\n• Purple Finch: declining due to House Finch competition\n• Song: rich warbling — longer and more complex than House Finch"},
+
+{id:65,cat:"bird",name:"American Goldfinch",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/American_Goldfinch_-_Male_-_Breeding_Plumage_%2817297325826%29.jpg/500px-American_Goldfinch_-_Male_-_Breeding_Plumage_%2817297325826%29.jpg",
+front:"What small finch is brilliant yellow in summer with black wings, but turns olive-drab in winter, making it hard to recognize between seasons?",
+back:"American Goldfinch (Spinus tristis)\n• Summer male: brilliant yellow; black wings with white bars; black forehead\n• Winter: dull olive-yellow — both sexes similar\n• Undulating flight pattern: 'per-chick-o-ree' call in flight\n• Strict vegetarian: seeds only — especially thistle and sunflower\n• Late nester: waits for thistle to bloom (July–August)\n• Uses thistle down to line nest\n• NYS state bird\n• Feeds at thistle feeders all winter (as dull-colored birds)"},
+
+{id:66,cat:"bird",name:"Northern Cardinal",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Male_northern_cardinal_in_Central_Park_%2852324%29.jpg/500px-Male_northern_cardinal_in_Central_Park_%2852324%29.jpg",
+front:"What crested songbird has an all-red male with a black mask, and is expanding its range northward into the Adirondack region?",
+back:"Northern Cardinal (Cardinalis cardinalis)\n• Male: brilliant all-red; black mask; prominent crest; orange-red bill\n• Female: warm brown with reddish crest, wings, and tail; same bill shape\n• Song: loud clear whistles — 'cheer, cheer, cheer' or 'birdy-birdy-birdy'\n• Female also sings — unusual among songbirds\n• Year-round resident; does not migrate\n• Range expanding northward — now regular in Adirondack lowlands\n• Not historically a deep Adirondack species — climate-linked range shift\n• NYS state bird of: Indiana, Illinois, Kentucky, North Carolina, Ohio, Virginia, West Virginia"},
+
+{id:67,cat:"bird",name:"House Sparrow",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Passer_domesticus_male_%2815%29.jpg/500px-Passer_domesticus_male_%2815%29.jpg",
+front:"What small invasive sparrow was introduced from Europe in 1851, is now one of the most abundant birds worldwide, and competes with native cavity nesters like bluebirds?",
+back:"House Sparrow (Passer domesticus)\n• Male: gray crown; chestnut nape; black bib; white cheeks\n• Female: plain dull brown; broad buff eyebrow\n• Introduced: Brooklyn, NY, 1851 — now found everywhere humans live\n• NOT a true sparrow — Old World sparrow (Passeridae), not New World\n• Competes aggressively with Eastern Bluebird, Tree Swallow for nest boxes\n• Will kill adult bluebirds and destroy eggs in nest boxes\n• Diet: grain, seeds, scraps — closely tied to human habitation\n• One of the most abundant birds on Earth (~1.5 billion)"},
+
+{id:68,cat:"bird",name:"Eastern Bluebird",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Eastern_bluebird_-_male.jpg/500px-Eastern_bluebird_-_male.jpg",
+front:"What cavity-nesting thrush has a brilliant blue back and orange-red breast, and made a dramatic comeback thanks to nest box programs?",
+back:"Eastern Bluebird (Sialia sialis)\n• Male: brilliant blue above; orange-red breast; white belly\n• Female: duller blue-gray; paler orange wash on breast\n• Cavity nester: natural cavities or nest boxes\n• Near extinction mid-20th century: competition from House Sparrows + Starlings\n• Recovery: nest box programs (bluebird trails) across NYS restored populations\n• Diet: insects (summer); berries (fall/winter)\n• NYS state bird\n• Song: soft musical 'chur-lee, chur-lee'"},
+
+{id:69,cat:"bird",name:"Hermit Thrush",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Hermit_Thrush_0882.jpg/500px-Hermit_Thrush_0882.jpg",
+front:"What spotted thrush breeds in Adirondack conifer forests, slowly raises and lowers its tail as a habit, and has one of the most beautiful songs of any North American bird?",
+back:"Hermit Thrush (Catharus guttatus)\n• Spotted breast; brown back; reddish-brown tail (contrast with back)\n• Distinctive habit: slowly raises and lowers tail repeatedly\n• Song: flute-like; opens with single note then spiraling phrases — ethereal\n• Breeds in conifer and mixed forests; Adirondack common\n• Only spotted thrush that winters in the US\n• Vermont state bird\n• Shy; often heard more than seen\n• Feeds on forest floor: insects, berries, earthworms"},
+
+{id:70,cat:"bird",name:"Bicknell's Thrush",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Catharus_bicknelli.jpg/500px-Catharus_bicknelli.jpg",
+front:"What rare high-elevation thrush breeds almost exclusively in stunted spruce-fir forests above 3,000 ft in the Adirondacks and Catskills, and is one of NYS's most imperiled breeding birds?",
+back:"Bicknell's Thrush (Catharus bicknelli)\n• Very similar to Gray-cheeked Thrush; best told by range and habitat\n• Breeds in dense stunted spruce-fir krummholz above ~3,000 ft\n• Adirondacks and Catskills = core US breeding range\n• NYS Special Concern; Partners in Flight high priority species\n• Winters in Caribbean (Haiti, Dominican Republic)\n• Threats: acid rain damage to high-elevation forest + climate change\n• Spruce-fir forests shifting upslope — running out of mountain\n• Paul Smiths area: likely to appear on high summits (St. Regis Mtn)"},
+
+{id:71,cat:"bird",name:"Yellow-rumped Warbler",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Setophaga_coronata_coronata_male.jpg/500px-Setophaga_coronata_coronata_male.jpg",
+front:"What is the most abundant warbler in North America, has four yellow patches (crown, rump, and two sides), and is the only warbler that can digest waxy bayberries?",
+back:"Yellow-rumped Warbler (Setophaga coronata)\n• Four yellow patches: crown, rump, each side of breast\n• 'Myrtle' form: white throat; most common in Northeast\n• Most abundant warbler in North America during migration\n• Can digest waxy cuticle of bayberries — allows winter survival in North\n• Breeds in Adirondack conifer forests\n• One of last warblers to leave in fall; one of first to return in spring\n• Song: weak warble; call: sharp 'chek'\n• Often seen flycatching or clinging to bark"},
+
+{id:72,cat:"bird",name:"Common Yellowthroat",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Common_Yellowthroat_-_Geothlypis_trichas%2C_Painted_Bunting_Adventures%2C_Edisto_Island%2C_South_Carolina_%2827063610167%29.jpg/500px-Common_Yellowthroat_-_Geothlypis_trichas%2C_Painted_Bunting_Adventures%2C_Edisto_Island%2C_South_Carolina_%2827063610167%29.jpg",
+front:"What warbler has a broad black mask on the male and calls 'witchety-witchety-witchety' from dense marsh and shrub vegetation?",
+back:"Common Yellowthroat (Geothlypis trichas)\n• Male: bright yellow throat; broad black mask with white border above\n• Female: plain yellow-olive; no mask\n• Song: loud 'witchety-witchety-witchety' — very distinctive\n• Habitat: marshes, wet shrubs, brushy fields — stays low in vegetation\n• One of the most widespread warblers in North America\n• Nests low in dense vegetation\n• Common summer resident throughout Adirondack wetlands\n• Skulky: more often heard than seen"},
+
+{id:73,cat:"bird",name:"Golden-winged Warbler",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Golden-winged_Warbler.jpg/500px-Golden-winged_Warbler.jpg",
+front:"What NYS-threatened warbler has bold golden wing patches, a black throat and mask (male), and requires early successional shrubby habitat that is rapidly disappearing?",
+back:"Golden-winged Warbler (Vermivora chrysoptera)\n• Bright golden-yellow wing patch; gray back\n• Male: black throat and mask; white cheeks\n• Female: duller; gray throat and mask\n• NYS Threatened species — significant population decline\n• Habitat: shrubby early successional — young aspen, alder, goldenrod\n• Hybridizes with Blue-winged Warbler → 'Brewster's' and 'Lawrence's' warblers\n• Range contracting northward as forests mature\n• Adirondack edge habitats are important refugia"},
+
+{id:74,cat:"bird",name:"Bobolink",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Bobolink%2C_Siletz_Bay_NWR%2C_Oregon_%2840745817784%29.jpg/500px-Bobolink%2C_Siletz_Bay_NWR%2C_Oregon_%2840745817784%29.jpg",
+front:"What grassland blackbird has a breeding male with a white back and yellow nape — basically a 'backwards tuxedo' — and sings a bubbling electronic-sounding song?",
+back:"Bobolink (Dolichonyx oryzivorus)\n• Male breeding: black below; white back and rump; yellow nape (unique reversed pattern)\n• Female and winter male: streaked buffy-brown; hard to identify\n• Song: loud bubbling electronic-sounding 'bobolink' — distinctive\n• Habitat: hayfields, wet meadows, grasslands\n• Long-distance migrant: breeds northern US/Canada; winters in South America\n• Threat: early hay cutting destroys nests before young fledge\n• Declining across Northeast — hayfield management critical\n• NYS Species of Special Concern"},
+
+// ── AMPHIBIANS & REPTILES ──
+{id:75,cat:"amphibian",name:"Wood Frog",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Lithobates_sylvaticus.jpg/500px-Lithobates_sylvaticus.jpg",
+front:"What frog freezes solid in winter, breeds explosively in vernal pools, and makes a call that sounds like quacking ducks?",
+back:"Wood Frog (Lithobates sylvaticus)\n• Freeze tolerant: heart stops; produces glucose antifreeze\n• First frog to breed each spring — often while ice still present\n• Call: rapid duck-like quacking; huge choruses\n• Explosive breeder: entire population breeds in 1–2 days\n• ID: dark brown; raccoon mask (dark eye patches)\n• Key indicator of vernal pool health and forest connectivity\n• Requires: vernal pool (breed) + upland forest within ~1,000 ft"},
+
+{id:76,cat:"amphibian",name:"Spotted Salamander",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Spotted_Salamander.jpg/500px-Spotted_Salamander.jpg",
+front:"What large mole salamander migrates to vernal pools on the first warm rainy nights of spring, has bright yellow spots, and spends most of its life underground?",
+back:"Spotted Salamander (Ambystoma maculatum)\n• Large (6–9 in); black with two rows of yellow-orange spots\n• Migration: to vernal pools on first warm (>40°F) rainy night of spring\n• Lays communal egg masses with green algae inside\n• Spends 300+ days/year underground; rarely seen except breeding night\n• Requires: vernal pool (breeding) + upland forest (adult habitat)\n• Adults eat earthworms, slugs, insects in forest floor\n• Key indicator of intact forest-wetland landscape connectivity"},
+
+{id:77,cat:"amphibian",name:"Eastern Red-backed Salamander",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Plethodon_cinereus.jpg/500px-Plethodon_cinereus.jpg",
+front:"What is the most abundant vertebrate in the Adirondack forest floor, never enters water, has no lungs (breathes through skin), and comes in two color phases?",
+back:"Eastern Red-backed Salamander (Plethodon cinereus)\n• Most abundant vertebrate in many NE forests — millions per acre\n• Entirely terrestrial: never enters water; breeds on land\n• Lungless: breathes entirely through moist skin\n• Two color phases:\n  - Red-backed: red-orange stripe down back\n  - Lead-backed: all dark gray (same species)\n• Found under logs, rocks, bark in moist forest\n• Indicator of soil moisture and forest floor health\n• Eats: mites, springtails, small invertebrates\n• Highly territorial for its size"},
+
+{id:78,cat:"amphibian",name:"Eastern Red-spotted Newt",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Notophthalmus_viridescens_edit.jpg/500px-Notophthalmus_viridescens_edit.jpg",
+front:"What salamander has THREE life stages — aquatic larva, terrestrial red eft, and aquatic adult — with the bright orange eft warning predators of its toxicity?",
+back:"Eastern Red-spotted Newt (Notophthalmus viridescens)\n• Three life stages:\n  1. Aquatic larva: gills; lives in ponds\n  2. Red Eft: terrestrial; bright orange-red; 2–7 years on land\n  3. Adult newt: aquatic; olive-green; red spots with black rings\n• Red spots on all stages\n• Red Eft coloration = aposematic (warning) — contains tetrodotoxin\n• Commonly seen crossing forest roads after rain (eft stage)\n• Adults: year-round in ponds, even under ice\n• Common in Adirondack ponds, lakes, and slow streams"},
+
+{id:79,cat:"amphibian",name:"Spring Peeper",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Pseudacris_crucifer_spring_peeper.jpg/500px-Pseudacris_crucifer_spring_peeper.jpg",
+front:"What tiny tree frog gives the first chorus of spring in the Adirondacks, has an X-shaped mark on its back, and can be nearly deafening in large groups?",
+back:"Spring Peeper (Pseudacris crucifer)\n• Tiny (¾–1¼ in); tan to brown; X-shaped mark on back\n• Toepad adhesive discs — can climb smooth surfaces\n• One of the first frogs to call each spring (March–April)\n• Chorus: incredibly loud for its size — can reach 90+ decibels\n• Breeds in shallow wetlands, woodland pools, ditches\n• Diet: small insects, spiders\n• Call: single high-pitched 'peep' repeated rhythmically\n• Freeze-tolerant — survives light freezing using glucose antifreeze"},
+
+{id:80,cat:"amphibian",name:"American Toad",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/American_Toad_%28Anaxyrus_americanus%29.jpg/500px-American_Toad_%28Anaxyrus_americanus%29.jpg",
+front:"What common toad has dry warty skin, large parotoid glands behind the eyes that secrete mild toxins, and gives a long melodic trill in breeding ponds?",
+back:"American Toad (Anaxyrus americanus)\n• Dry warty skin; brown to gray; lighter belly\n• Large parotoid glands behind eyes: secrete bufotoxins\n• Toxin deters predators; can cause mouth irritation in dogs\n• Call: long beautiful musical trill lasting 20–30 seconds\n• Breeds in shallow ponds and puddles (April–May)\n• Eats up to 1,000 insects per day — gardens love them\n• Toads do NOT cause warts (human myth)\n• Parotoid gland: enlarged kidney-shaped lump behind eye = key ID feature"},
+
+{id:81,cat:"amphibian",name:"Snapping Turtle",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Chelydra_serpentina_2.jpg/500px-Chelydra_serpentina_2.jpg",
+front:"What is NYS's largest freshwater turtle, with a small plastron that prevents shell retraction and a powerful hooked beak?",
+back:"Common Snapping Turtle (Chelydra serpentina)\n• NYS's largest freshwater turtle — 10–35+ lbs\n• Shell (carapace): brown, ridged; up to 18 in\n• Plastron (bottom): small, cross-shaped — CAN'T retract into shell\n• Defensive on land: snaps powerfully; docile when swimming\n• Omnivore: aquatic plants, fish, frogs, waterfowl, carrion\n• Long-lived: 30–40+ years; slow to mature (15–20 years)\n• Females travel far overland to nest in June\n• Ecological role: scavenger and nutrient recycler in ponds"},
+
+{id:82,cat:"amphibian",name:"Painted Turtle",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Chrysemys_picta_bellii_04.jpg/500px-Chrysemys_picta_bellii_04.jpg",
+front:"What is the most common turtle in NYS, identifiable by its smooth dark shell with red-orange margins and yellow-striped head, often seen basking in groups?",
+back:"Painted Turtle (Chrysemys picta)\n• Most abundant and widespread turtle in NYS\n• Smooth dark olive-green shell; red-orange markings on shell edge\n• Skin: dark with yellow stripes on head/neck; red stripes on legs\n• Basks in groups on logs — excellent thermoregulator\n• Overwinters underwater; cloacal bursae allow underwater gas exchange\n• Nests June–July; eggs incubate 70–80 days\n• Diet: aquatic vegetation, algae, invertebrates, carrion"},
+
+// ── AQUATIC ──
+{id:83,cat:"aquatic",name:"Brook Trout",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Salvelinus_fontinalis.jpg/500px-Salvelinus_fontinalis.jpg",
+front:"What is NYS's only native trout, requires cold clean water below 20°C, has worm-like markings on its back, and is an indicator of pristine water quality?",
+back:"Brook Trout (Salvelinus fontinalis)\n• NYS State Freshwater Fish; actually a char, not a true trout\n• Back: worm-like vermiculations (olive/yellow wavy lines)\n• Sides: red spots with blue halos\n• Belly: white with black-edged orange-red fins\n• Needs water below 20°C; very sensitive to siltation and acid rain\n• Presence = indicator of pristine water quality\n• Adirondacks: eastern US stronghold for wild brook trout"},
+
+{id:84,cat:"aquatic",name:"EPT Macroinvertebrates",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Ephemera_danica_mayfly.jpg/500px-Ephemera_danica_mayfly.jpg",
+front:"Name the three pollution-intolerant insect orders that form the EPT Index — one key ID feature for each.",
+back:"EPT = Pollution-Intolerant Stream Indicators\n\n• E = Ephemeroptera (MAYFLIES)\n  - Flattened; 3 tails; single tarsal claw; gills on abdomen\n\n• P = Plecoptera (STONEFLIES)\n  - 2 tails; 2 tarsal claws; found under flat rocks in cold streams\n\n• T = Trichoptera (CADDISFLIES)\n  - Build portable cases of pebbles, sticks, or sand grains\n\nHigh EPT diversity = HEALTHY stream\nBiotic Index: <2 excellent; 2–4 good; 4–6 fair; >6 poor\nLow EPT + high worms/midges = IMPAIRED stream"},
+
+{id:85,cat:"aquatic",name:"Zebra Mussel",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Zebra_mussels_GLERL_1.jpg/500px-Zebra_mussels_GLERL_1.jpg",
+front:"What invasive bivalve arrived via ballast water in 1988, attaches to hard surfaces in clusters, and has transformed Great Lakes and Lake Champlain ecology?",
+back:"Zebra Mussel (Dreissena polymorpha)\n• D-shaped; yellow-brown with dark zigzag stripes; 1–2 in\n• Attaches to rocks, pipes, boat hulls with byssal threads\n• Filter-feeder: clears water dramatically — but starves native species\n• Impacts:\n  - Phytoplankton removed → starves zooplankton and larval fish\n  - Displaces and smothers native unionid mussels\n  - Clogs water intake pipes costing millions annually\n• Prevention: 'Clean, Drain, Dry' boats and equipment"},
+
+{id:86,cat:"aquatic",name:"Water Chestnut",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Trapa_natans_kl.jpg/500px-Trapa_natans_kl.jpg",
+front:"What invasive aquatic plant forms dense floating rosettes that block sunlight, and produces sharp 4-pronged nuts that can puncture bare feet?",
+back:"Water Chestnut (Trapa natans)\n• Floating rosettes of triangular leaves with inflated petioles\n• Sharp 4-pronged nuts (achenes) — hazard to swimmers; long-lived seeds\n• Dense mats block sunlight → kills native submerged vegetation → low oxygen\n• Annual plant — controlled by hand-pulling before seed set (late June–July)\n• Lake Champlain has major infestations\n• NYS regulated invasive; illegal to transport\n• NOT the same as edible water chestnut used in cooking"},
+
+// ── INVASIVES ──
+{id:87,cat:"invasive",name:"Emerald Ash Borer",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Emerald_ash_borer_-_agrilus_planipennis.jpg/500px-Emerald_ash_borer_-_agrilus_planipennis.jpg",
+front:"What metallic green beetle is devastating all ash species in NYS with S-shaped larval galleries and woodpecker 'blonding' as an early warning sign?",
+back:"Emerald Ash Borer (Agrilus planipennis)\n• Adult: brilliant metallic green; D-shaped; ½ in long\n• Larvae: cream-colored; feed in phloem and cambium\n• S-shaped serpentine galleries under bark = diagnostic sign\n• D-shaped adult exit holes (1/8 in)\n• 'Blonding': woodpeckers rip bark — pale exposed wood visible\n• Kills all 5 NYS ash species; millions already dead\n• Firewood movement = #1 spread pathway — never move firewood"},
+
+{id:88,cat:"invasive",name:"Hemlock Woolly Adelgid",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Hemlock_woolly_adelgid_3.jpg/500px-Hemlock_woolly_adelgid_3.jpg",
+front:"What pest deposits white woolly egg masses at hemlock needle bases, kills Eastern Hemlock in 4–10 years, and is spreading northward with warming winters?",
+back:"Hemlock Woolly Adelgid (Adelges tsugae)\n• Tiny aphid-like insect; visible as white woolly masses at needle base\n• Feeds on starch → needles gray, droop, fall\n• Trees die in 4–10 years without treatment\n• Cold winters historically limited northward spread — warming is key threat\n• Treatment: soil injection of imidacloprid (effective 5–7 years)\n• Ecological impact: hemlock loss → stream warming → coldwater fish decline"},
+
+{id:89,cat:"invasive",name:"Purple Loosestrife",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Purple_loosestrife_%28Lythrum_salicaria%29.jpg/500px-Purple_loosestrife_%28Lythrum_salicaria%29.jpg",
+front:"This European wetland plant has magenta flower spikes, forms dense monocultures, and produces 2.7 million seeds per plant per year. What is it?",
+back:"Purple Loosestrife (Lythrum salicaria)\n• Tall perennial; magenta/purple flower spikes; square stems; opposite lance leaves\n• One plant: 2.7 million seeds/year + vegetative spread\n• Forms monocultures — 50–75% fewer wildlife species in invaded wetlands\n• Biological Control: Galerucella beetles (European leaf-feeders — approved)\n• Do NOT pull mature plants — disturbs soil and spreads seeds\n• NYS regulated invasive"},
+
+{id:90,cat:"invasive",name:"Spotted Lanternfly",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Spotted_Lanternfly%2C_Lycorma_delicatula%2C_its_adult_form.jpg/500px-Spotted_Lanternfly%2C_Lycorma_delicatula%2C_its_adult_form.jpg",
+front:"This invasive from Asia has spotted gray forewings and bright red hindwings, lays egg masses resembling dried mud, and feeds on 70+ plant species.",
+back:"Spotted Lanternfly (Lycorma delicatula)\n• Adult: gray spotted forewings; red hindwings with black spots\n• Egg masses: gray-brown; look like dried mud on bark and surfaces\n• Feeds on phloem of 70+ species: grapes, hops, apples, Tree of Heaven\n• Excretes honeydew → black sooty mold → smothers plants\n• NYS quarantine counties — report all sightings to DEC\n• Preferred host: Tree of Heaven (also invasive)"},
+
+{id:91,cat:"invasive",name:"Japanese Barberry",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Berberis_thunbergii1.jpg/500px-Berberis_thunbergii1.jpg",
+front:"What dense thorny invasive shrub has single spines at each node, persistent red berries, and is linked to higher Lyme disease risk?",
+back:"Japanese Barberry (Berberis thunbergii)\n• Dense thorny shrub; small oval alternate leaves; red in fall\n• Single spine at each node — distinguishes from native shrubs\n• Abundant red berries persist through winter — spread by birds\n• Higher tick density in barberry thickets → higher Lyme disease risk\n• Creates humid microhabitat ideal for white-footed mice (tick reservoir)\n• NYS regulated invasive — illegal to sell, plant, or transport\n• Extremely difficult to eradicate once established"},
+
+// ── FOREST PESTS ──
+{id:92,cat:"pest",name:"Beech Leaf Disease",img:"",
+front:"What disease is rapidly killing American Beech, caused by a nematode, with dark interveinal banding as the key symptom?",
+back:"Beech Leaf Disease (BLD)\n• Cause: nematode Litylenchus crenatae mccannii + associated microbes\n• Symptoms: dark green-black banding between leaf veins (interveinal banding)\n• Progresses: leaf curling → reduced crown density → tree death in years\n• First detected Ohio 2012; spreading rapidly throughout Northeast\n• No treatment currently available\n• Combined with Beech Bark Disease → double threat to American Beech"},
+
+{id:93,cat:"pest",name:"EAB Damage Signs",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/EAB_serpentine_galleries.jpg/500px-EAB_serpentine_galleries.jpg",
+front:"You see an ash tree with crown thinning from the top down, epicormic sprouting, woodpecker 'blonding,' and D-shaped exit holes. What pest?",
+back:"Emerald Ash Borer — Damage Signs:\n• Crown thinning/dieback: top-down progression\n• 'Blonding': woodpeckers rip bark — pale exposed wood\n• Epicormic sprouting: stress shoots from trunk and base\n• S-shaped larval galleries under bark\n• D-shaped exit holes: 1/8 in — diagnostic for borers\n• All 5 NYS ash species: White, Green, Black, Blue, Pumpkin Ash"},
+
+{id:94,cat:"pest",name:"White-nose Syndrome",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/White-nose_syndrome_affected_bat.jpg/500px-White-nose_syndrome_affected_bat.jpg",
+front:"What fungal disease has killed millions of hibernating bats since 2006, and is visible as white fuzzy growth on muzzle and wing membranes?",
+back:"White-Nose Syndrome (WNS)\n• Cause: fungus Pseudogymnoascus destructans (Pd)\n• White fuzzy growth on muzzle, ears, wing membranes during hibernation\n• Disrupts hibernation → increased arousal → fat reserve depletion → starvation\n• First detected: Howe's Cave, NY, 2006\n• Killed 6–7 million+ bats in North America\n• Little Brown Bat: populations down 90%+; now federally endangered\n• Do NOT enter closed caves or mines\n• Decontaminate clothing/gear between cave visits"},
+
+{id:95,cat:"pest",name:"Beech Bark Disease",img:"",
+front:"What disease complex creates rough 'elephantine' bark, orange-red cankers, and a 'snap hazard' in American Beech? Name the scale insect and fungus involved.",
+back:"Beech Bark Disease (BBD)\n• Two-step disease complex:\n  1. Beech Scale (Cryptococcus fagisuga): European insect; wounds bark\n  2. Neonectria fungus: enters wounds → orange-red cankers → girdling\n• Symptoms:\n  - Rough 'elephantine' bark texture\n  - Sunken orange-red cankers and bleeding\n  - Crown dieback; sudden tree breakage ('snap hazard')\n• 'Survivor Beech' genetics being studied for resistance\n• NOW combined with Beech Leaf Disease — double threat"},
+];
+
+const NPS_CARDS=[
+{id:101,cat:"nps_source",name:"Agricultural NPS",img:"",
+front:"List four major agricultural non-point source pollutants and the waterway problem each causes.",
+back:"Agricultural NPS Pollutants:\n1. Sediment (tillage erosion) → turbidity, smothers spawning gravel\n2. Nitrogen (fertilizer/manure) → algal blooms, hypoxia\n3. Phosphorus (fertilizer/manure) → eutrophication, HABs\n4. Pathogens (E. coli from manure) → beach closures, drinking water risk\n5. Pesticides → aquatic invertebrate toxicity\n\nKey: NPS = diffuse entry points; can't be traced to a single pipe"},
+{id:102,cat:"nps_source",name:"Urban Stormwater",img:"",
+front:"How does urbanization change the hydrologic cycle, and what four pollutants does urban stormwater carry?",
+back:"Urbanization & Hydrology:\n• Impervious surfaces replace infiltration\n• Runoff volume ↑ 5–10x vs. forested land\n• Peak flows arrive faster → stream bank erosion, flooding\n\nUrban Stormwater Pollutants:\n1. Sediment → turbidity\n2. Nutrients (lawn fertilizer, pet waste) → algal blooms\n3. Hydrocarbons (oil/gas from pavement) → toxicity\n4. Heavy metals (brake dust, zinc) → aquatic toxicity\n5. Pathogens (pet waste, sewer overflows) → beach closures"},
+{id:103,cat:"nps_source",name:"Eutrophication",img:"",
+front:"Define eutrophication. What nutrient limits algal growth in freshwater vs. marine systems, and what are the three stages?",
+back:"Eutrophication = nutrient enrichment → excessive algae/plant growth\n\nLimiting nutrient:\n• Freshwater: PHOSPHORUS (P)\n• Marine/estuarine: NITROGEN (N)\n\nStages:\n1. Nutrient loading → algal blooms / aquatic plant overgrowth\n2. Algae die → bacterial decomposition consumes dissolved oxygen\n3. Hypoxia/anoxia → fish kills; shift to pollution-tolerant species\n\nHABs: some cyanobacteria produce toxins (microcystins)"},
+{id:104,cat:"nps_source",name:"Acid Deposition",img:"",
+front:"What is acid deposition, and why are Adirondack lakes especially vulnerable? Name two biological impacts.",
+back:"Acid Deposition\n• Wet: acid rain/snow (H2SO4, HNO3 from SO2 and NOx emissions)\n• Normal rain pH: 5.6; acid rain: <5.0; some Adirondack lakes now 4.2\n\nAdirondack vulnerability:\n• Thin soils over granite bedrock — low buffering capacity\n• High elevation intercepts cloud water (10x more acidic than rain)\n\nBiological impacts:\n1. Brook trout and mayflies eliminated below pH 5.0\n2. Mercury methylation increases → bioaccumulates in loons, fish, humans"},
+{id:105,cat:"nps_source",name:"Harmful Algal Blooms",img:"",
+front:"What are HABs, which organism causes most freshwater HABs, and what are two health risks to humans and pets?",
+back:"Harmful Algal Blooms (HABs)\n• Explosive growth of cyanobacteria (blue-green algae)\n• Triggered by: excess phosphorus + nitrogen + warm temperatures\n• Appearance: green/blue-green paint or pea soup; musty odor\n\nHealth Risks:\n1. Microcystins: liver toxins → nausea, vomiting, liver damage\n2. Skin contact: rashes, eye irritation\n3. Pet deaths reported (dogs swim/drink bloom water)\n\nNYS: DEC issues HAB advisories; 'When in doubt, stay out'"},
+{id:106,cat:"bmp_urban",name:"Rain Garden",img:"",
+front:"What is a rain garden, and how does it reduce non-point source pollution from urban stormwater?",
+back:"Rain Garden (Bioretention Cell)\n• Shallow depression planted with deep-rooted native plants\n• Captures & infiltrates stormwater from impervious surfaces\n\nHow it reduces NPS:\n1. Infiltration removes sediment & filters nutrients\n2. Plant uptake removes N & P\n3. Microbial action breaks down pollutants\n4. Reduces peak flow → less erosion downstream\n\nSiting: 10 ft from foundations; sized at 20–30% of drainage area"},
+{id:107,cat:"bmp_urban",name:"Permeable Pavement",img:"",
+front:"What is permeable pavement, and what are its limitations in Northern NY's climate?",
+back:"Pervious/Permeable Pavement\n• Pavement with open pores that allow water to infiltrate\n• Types: pervious concrete, permeable asphalt, interlocking pavers\n• Can eliminate most runoff from small to moderate storms\n\nLimitations in Northern NY:\n• Requires regular vacuuming to prevent clogging\n• Sand/salt for winter traction can clog pores\n• Freeze-thaw cycles can damage some types\n• Most cost-effective for new construction"},
+{id:108,cat:"bmp_urban",name:"Storm Drain Marking",img:"",
+front:"What community-level NPS BMP involves painted markers on storm drain inlets, and what behavior change does it promote?",
+back:"Storm Drain Marking/Stenciling\n• Painted markers on storm drain inlets\n• Message: 'No Dumping — Drains to [River/Lake]'\n• Target behaviors:\n  - No dumping of lawn clippings, paint, oil into drains\n  - Pick up pet waste before rain washes it in\n  - Minimize fertilizer/pesticide use near paved areas\n• Cost: $5–15 per drain; excellent school/community action project"},
+{id:109,cat:"bmp_urban",name:"Green Roof",img:"",
+front:"What is a green roof and how does it function as an urban NPS BMP? What are its co-benefits beyond stormwater?",
+back:"Green Roof (Vegetated Roof System)\n• Roof covered with growing medium and drought-tolerant plants (sedums)\n• Stormwater function:\n  - Absorbs rainfall → delays and reduces runoff\n  - Can retain 60–100% of rainfall in small storms\n• Co-benefits:\n  - Reduces urban heat island effect\n  - Extends roof lifespan\n  - Reduces building heating/cooling costs\n  - Urban habitat for birds and pollinators"},
+{id:110,cat:"bmp_ag",name:"Riparian Buffer Strip",img:"",
+front:"What agricultural BMP involves permanent vegetation along stream banks? How wide, and what three functions does it perform?",
+back:"Riparian Buffer Strip\n• Permanent vegetation (grass, shrubs, trees) along stream banks\n• Width: minimum 35 ft for grass; 100 ft for multi-zone buffer\n\nThree key functions:\n1. SEDIMENT TRAP: slows runoff → sediment drops before stream\n2. NUTRIENT FILTER: plants uptake N & P; soil microbes denitrify\n3. BANK STABILIZER: roots hold soil; shade → protects coldwater fish\n\nRequired by: NYS AEM program"},
+{id:111,cat:"bmp_ag",name:"Cover Crops",img:"",
+front:"What agricultural BMP involves planting crops between cash crop seasons? Name three NPS benefits and two common species.",
+back:"Cover Crops\n• Crops planted in off-season to cover bare soil\n\nNPS benefits:\n1. Prevent soil erosion and sediment runoff\n2. Nitrogen fixation (legumes) → reduces synthetic fertilizer need\n3. Uptake residual nitrogen → prevents leaching to groundwater\n\nCommon species:\n• Winter rye: fast-establishing; excellent erosion control\n• Clover: nitrogen-fixing legume\n• Radish: breaks compaction; winter-kills — no termination needed"},
+{id:112,cat:"bmp_ag",name:"Nutrient Management Plan",img:"",
+front:"What is a Nutrient Management Plan (NMP) and how does it reduce N and P loading from farm fields?",
+back:"Nutrient Management Plan (NMP)\n• Site-specific plan balancing crop needs with manure/fertilizer\n• Goal: 'right rate, right time, right place, right source'\n\nHow it reduces NPS:\n1. Soil testing → apply only what crops need → less surplus\n2. Timing: avoid application before rain or on frozen ground\n3. Manure setbacks: no application near streams/wetlands\n4. Credits manure nutrients → reduces synthetic fertilizer purchases\n\nRequired for: NYS CAFO permits; voluntary via AEM"},
+{id:113,cat:"bmp_stream",name:"Constructed Wetland",img:"",
+front:"How does a constructed wetland treat NPS pollution, and name two types.",
+back:"Constructed Wetland\n• Engineered system mimicking natural wetland processes\n\nTreatment mechanisms:\n1. Sedimentation: particles settle in slow shallow water\n2. Plant uptake: emergent plants absorb N & P\n3. Microbial denitrification: converts nitrate → N₂ gas\n4. Filtration through substrate\n\nTypes:\n• Surface Flow (SF): open water with emergent plants\n• Subsurface Flow (SSF): gravel bed, water flows below surface\n\nEffectiveness: removes 50–90% of total phosphorus from ag runoff"},
+{id:114,cat:"bmp_stream",name:"Stream Bank Stabilization",img:"",
+front:"Compare two approaches to stream bank stabilization: hard armoring vs. bioengineering.",
+back:"Stream Bank Stabilization\n\nHard Armoring:\n• Riprap (rock), concrete, gabion baskets\n• Immediately effective; durable\n• Downsides: destroys riparian habitat; can increase downstream erosion\n\nBioengineering (Soil Bioengineering):\n• Live stakes, brush mattresses, coir logs + native plantings\n• Slower to establish (1–2 growing seasons)\n• Upsides: self-repairing; provides habitat; more natural\n• Preferred approach for ecological restoration"},
+{id:115,cat:"bmp_stream",name:"Two-Stage Ditch",img:"",
+front:"What is a two-stage ditch, and how does it improve on a traditional agricultural drainage ditch?",
+back:"Two-Stage Ditch\n• Agricultural drainage ditch redesigned with floodplain 'benches' on sides\n• Traditional ditch: deep, straight, fast — erodes banks, delivers sediment\n\nImprovements:\n1. Benches allow overbank flooding → slows water, drops sediment\n2. Bench vegetation uptakes nutrients\n3. Reduces shear stress on channel → less erosion\n4. Provides invertebrate and fish habitat\n5. More stable long-term → less maintenance dredging"},
+{id:116,cat:"policy",name:"Clean Water Act §319",img:"",
+front:"What does Section 319 of the Clean Water Act do, and how does it fund NPS pollution control in NYS?",
+back:"Clean Water Act Section 319 (1987 amendment)\n• Specifically addresses non-point source pollution\n\nKey provisions:\n1. States identify waters impaired by NPS pollution\n2. States develop NPS Management Programs\n3. EPA provides 319 grant funding to states\n\nIn NYS:\n• DEC administers 319 funds\n• Funds watershed planning, BMP implementation, monitoring\n• Linked to: TMDL process for impaired waters"},
+{id:117,cat:"policy",name:"TMDL",img:"",
+front:"What is a TMDL, who develops it, and how does it connect to NPS pollution control?",
+back:"Total Maximum Daily Load (TMDL)\n• Maximum pollutant load a water body can receive and still meet water quality standards\n• Required by CWA Section 303(d) for impaired waters\n\nDevelopment: State agency (DEC in NY) + EPA approval\n• Allocates load between point sources (WLA) + non-point sources (LA)\n\nNPS connection:\n• LA identifies needed NPS reduction\n• Drives BMP implementation in contributing watershed\n• Examples: phosphorus TMDLs for Lake Champlain"},
+{id:118,cat:"policy",name:"NYS AEM Program",img:"",
+front:"What is NYS's Agricultural Environmental Management (AEM) program and its 5-tier framework?",
+back:"NYS Agricultural Environmental Management (AEM)\n• Voluntary NYS program: Dept. of Agriculture and Markets + local SWCDs\n• Goal: help farmers identify and address environmental risks\n\nTiered Framework:\n• Tier 1: Farm assessment — identify risks\n• Tier 2: Develop whole-farm conservation plan\n• Tier 3: Implement priority BMPs\n• Tier 4: Verify implementation and effectiveness\n• Tier 5: Continuous improvement\n\nFunding: USDA EQIP cost-shares BMP installation"},
+{id:119,cat:"policy",name:"Stormwater Audit",img:"",
+front:"What is a stormwater audit, and how would you conduct one at your school? List four things to map or measure.",
+back:"Stormwater Audit — Site Assessment Tool\n• Systematic field assessment of how stormwater moves across a site\n\nAt your school:\n1. MAP impervious surfaces: roofs, parking lots, sidewalks\n2. TRACE drainage: where does runoff from each surface go?\n3. IDENTIFY pollutants: fertilized lawns, parking lot oils, salt zones\n4. MEASURE: slope of paved areas; note erosion deposits\n5. ASSESS vegetation: buffers or rain gardens already present?\n\nUsing data: prioritize discharge points, propose targeted BMPs"},
+];
+
+const ALL_CARDS=[...NATURE_CARDS,...NPS_CARDS];
+const SCORE_KEY="envirothon-scores-v1";
+const IMG_KEY="envirothon-user-images-v1";
+
+let currentScreen="home",activeDeck=null,activeCat=null;
+let deck=[],deckIdx=0,flipped=false,sessionScores={};
+let allScores={},userImages={},pendingUploadId=null;
+
+try{allScores=JSON.parse(localStorage.getItem(SCORE_KEY)||"{}");}catch{}
+try{userImages=JSON.parse(localStorage.getItem(IMG_KEY)||"{}");}catch{}
+
+function saveScores(){try{localStorage.setItem(SCORE_KEY,JSON.stringify(allScores));}catch{}}
+function saveUserImages(){try{localStorage.setItem(IMG_KEY,JSON.stringify(userImages));}catch{}}
+function getImg(card){return userImages[card.id]||card.img||"";}
+
+function showScreen(name){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById("screen-"+name).classList.add("active");
+  currentScreen=name;
+}
+function showHome(){renderHome();showScreen("home");}
+function showManage(){renderManage();showScreen("manage");}
+
+function renderHome(){
+  const tGot=Object.values(allScores).reduce((a,s)=>a+(s.got||0),0);
+  const tMissed=Object.values(allScores).reduce((a,s)=>a+(s.missed||0),0);
+  const tSeen=Object.keys(allScores).length;
+  const pd=document.getElementById("home-progress");
+  if(tGot+tMissed>0){
+    pd.style.display="flex";
+    document.getElementById("home-stats").innerHTML=
+      `<span style="color:#1a5c1a;font-weight:700">✓ ${tGot} correct</span>&nbsp;·&nbsp;<span style="color:#8b1a1a;font-weight:700">✗ ${tMissed} missed</span>&nbsp;·&nbsp;${tSeen} cards seen`;
+  }else{pd.style.display="none";}
+
+  const imgCount=ALL_CARDS.filter(c=>getImg(c)).length;
+  const badge=document.getElementById("img-count-badge");
+  badge.textContent=imgCount+" / "+ALL_CARDS.length;
+  badge.style.background=imgCount>0?"#2d6a2d":"#bbb";
+
+  const dl=document.getElementById("deck-list");dl.innerHTML="";
+  Object.entries(DECK_GROUPS).forEach(([gk,g])=>{
+    const block=document.createElement("div");block.className="deck-block";
+    let catsHtml="";
+    Object.entries(g.cats).forEach(([ck,label])=>{
+      const cards=getCardsForCat(gk,ck);
+      const mastered=cards.filter(c=>{const s=allScores[c.id];return s&&s.got>0&&s.got>=s.missed;}).length;
+      const attempted=cards.filter(c=>allScores[c.id]).length;
+      const sub=attempted>0?`<div class="mastered">${mastered}/${cards.length} mastered</div>`:"";
+      catsHtml+=`<button class="cat-btn" style="background:${g.color}18;color:${g.color};border-color:${g.color}40" onclick="startDeck('${gk}','${ck}')">${label}${sub}</button>`;
+    });
+    block.innerHTML=`<div class="deck-header" style="background:${g.color}"><div class="deck-title">${g.label}</div><div class="deck-desc">${g.desc}</div></div><div class="deck-cats">${catsHtml}</div>`;
+    dl.appendChild(block);
+  });
+}
+
+function resetScores(){
+  if(!confirm("Reset all your progress? This cannot be undone."))return;
+  allScores={};saveScores();renderHome();
+}
+
+function getCardsForCat(gk,ck){
+  const src=gk==="nature"?NATURE_CARDS:NPS_CARDS;
+  return(ck==="all_nature"||ck==="all_nps")?[...src]:src.filter(c=>c.cat===ck);
+}
+
+function startDeck(gk,ck){
+  activeDeck=gk;activeCat=ck;
+  deck=[...getCardsForCat(gk,ck)].sort(()=>Math.random()-.5);
+  deckIdx=0;flipped=false;sessionScores={};
+  renderCard();showScreen("card");
+}
+function restartDeck(){startDeck(activeDeck,activeCat);}
+
+function renderCard(){
+  const card=deck[deckIdx];
+  const color=CAT_COLORS[card.cat]||"#333";
+  document.getElementById("card-counter").textContent=(deckIdx+1)+" / "+deck.length;
+  const pct=((deckIdx+1)/deck.length*100).toFixed(1);
+  const pb=document.getElementById("prog-bar");
+  pb.style.width=pct+"%";pb.style.background=color;
+
+  const ia=document.getElementById("card-img-area");
+  ia.style.background=color+"22";
+  const imgSrc=getImg(card);
+  let imgHtml=imgSrc
+    ?`<img src="${imgSrc}" alt="${card.name}" onerror="this.style.display='none'">`
+    :`<div class="img-placeholder"><div class="emoji">${CAT_EMOJI[card.cat]}</div><div class="hint" style="color:${color}">No image yet</div></div>`;
+  imgHtml+=`<div class="cat-badge" style="background:${color}">${CAT_EMOJI[card.cat]} ${card.cat.replace("_"," ")}</div>`;
+  imgHtml+=`<button onclick="triggerUpload(${card.id})" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.55);color:white;border:none;border-radius:7px;padding:5px 9px;cursor:pointer;font-size:.75em;font-weight:700">${imgSrc?"📷 Replace":"📷 Add"}</button>`;
+  ia.innerHTML=imgHtml;
+
+  document.getElementById("card-question").textContent=card.front;
+  const aa=document.getElementById("card-answer");
+  aa.style.display="none";
+  aa.style.borderTopColor=color+"40";
+  aa.style.background=color+"08";
+  aa.innerHTML=`<div class="answer-name" style="color:${color}">✓ ${card.name}</div><div class="answer-body">${card.back}</div>`;
+  document.getElementById("card-controls").innerHTML=`<button class="btn btn-reveal" style="background:${color}" onclick="revealCard()">Reveal Answer</button>`;
+  flipped=false;
+}
+
+function revealCard(){
+  flipped=true;
+  document.getElementById("card-answer").style.display="block";
+  document.getElementById("card-controls").innerHTML=`<div class="btn-row"><button class="btn-wrong" onclick="nextCard(false)">✗ Still Learning</button><button class="btn-right" onclick="nextCard(true)">✓ Got It</button></div>`;
+}
+
+function nextCard(got){
+  const card=deck[deckIdx];
+  sessionScores[card.id]=got;
+  allScores[card.id]={
+    got:(allScores[card.id]?.got||0)+(got?1:0),
+    missed:(allScores[card.id]?.missed||0)+(got?0:1)
+  };
+  saveScores();advanceCard();
+}
+function skipCard(){advanceCard();}
+function advanceCard(){
+  if(deckIdx+1<deck.length){deckIdx++;renderCard();}
+  else showDone();
+}
+
+function showDone(){
+  const got=Object.values(sessionScores).filter(Boolean).length;
+  const total=Object.keys(sessionScores).length;
+  const tGot=Object.values(allScores).reduce((a,s)=>a+(s.got||0),0);
+  const tMissed=Object.values(allScores).reduce((a,s)=>a+(s.missed||0),0);
+  document.getElementById("done-session").textContent=got+" / "+total+" correct this round";
+  document.getElementById("done-alltime").innerHTML=
+    `<span style="color:#1a5c1a;font-weight:700">✓ ${tGot} correct</span>&nbsp;·&nbsp;<span style="color:#8b1a1a;font-weight:700">✗ ${tMissed} missed</span>`;
+  showScreen("done");
+}
+
+function renderManage(){
+  const list=document.getElementById("manage-list");list.innerHTML="";
+  ALL_CARDS.forEach(card=>{
+    const col=CAT_COLORS[card.cat]||"#555";
+    const imgSrc=getImg(card);
+    const thumbHtml=imgSrc?`<img src="${imgSrc}" alt="${card.name}">`:`<span>${CAT_EMOJI[card.cat]}</span>`;
+    const removeBtn=imgSrc?`<button class="btn-remove" onclick="removeImage(${card.id})">✕</button>`:"";
+    const row=document.createElement("div");row.className="manage-row";row.id="manage-row-"+card.id;
+    row.innerHTML=`<div class="manage-thumb">${thumbHtml}</div><div style="flex:1;min-width:0"><div class="manage-name">${card.name}</div><div class="manage-cat" style="color:${col}">${CAT_EMOJI[card.cat]} ${card.cat.replace("_"," ")}</div></div><div class="manage-btns"><button class="btn-add" style="background:${col}" onclick="triggerUpload(${card.id})">${imgSrc?"Replace":"Add"}</button>${removeBtn}</div>`;
+    list.appendChild(row);
+  });
+}
+
+function triggerUpload(cardId){
+  pendingUploadId=cardId;
+  const fi=document.getElementById("file-input");
+  fi.value="";fi.click();
+}
+function removeImage(cardId){
+  delete userImages[cardId];saveUserImages();
+  if(currentScreen==="manage")renderManage();
+  if(currentScreen==="card")renderCard();
+  renderHome();
+}
+
+document.getElementById("file-input").addEventListener("change",function(e){
+  const file=e.target.files[0];
+  if(!file||!pendingUploadId)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    userImages[pendingUploadId]=ev.target.result;
+    saveUserImages();
+    if(currentScreen==="manage")renderManage();
+    if(currentScreen==="card")renderCard();
+    renderHome();
+  };
+  reader.readAsDataURL(file);
+  e.target.value="";
+});
+
+renderHome();
+</script>
+</body>
+</html>
